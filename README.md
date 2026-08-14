@@ -64,8 +64,9 @@ back button walks through the languages you actually visited.
    (e.g. `es: '/es'`), the short button label to `LOCALE_LABELS`, the language's own name to
    `LOCALE_NAMES`, the Open Graph tag to `LOCALE_OG_TAGS`, the dictionary to `DICTIONARIES`, and the
    language prefix to `detectLocale`.
-3. Add the language to the `LOCALES` list and the `LABELS` map in `worker/index.ts`, so `POST /api/name`
-   asks Grok for an algorithm name in that language.
+3. Register the locale in `worker/index.ts`, so `POST /api/name` asks Grok for an algorithm name in that
+   language: add the tag to `LOCALES`, the language name Grok is told to write in to `LANGUAGES` (e.g.
+   `es: 'Spanish'`), and a new `LABELS_<LOCALE>` table of signal labels wired into the `LABELS` map.
 
 Nothing else needs a change: the switcher, the `hreflang` alternates, the metadata, and the number
 formatting all iterate over `LOCALES`. The new path also works with no server change, because
