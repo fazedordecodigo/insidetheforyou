@@ -31,6 +31,7 @@ O site serve inglês e português do Brasil completos, com troca de idioma persi
 - [Extrair a copy de DemoFeed, ActionEffects e WeightLab](issues/04-extrair-copy-demofeed-weightlab.md) — posts anotados, tópicos, presets e posts do playground por id; resumo dinâmico com funções no dicionário (plural em pt-BR); posts reais intocados.
 - [Glossário pt-BR dos termos técnicos e de UI do X](issues/05-glossario-pt-br.md) — tabela fechada em `glossario.md` com cinco tratamentos; rótulos de ação seguem o app do X em pt-BR (emenda ao charting); nomes de sistema em inglês puro; ranker, transformer e dwell em inglês com glosa.
 - [Escrever a tradução pt-BR completa](issues/06-traducao-pt-br.md) — paridade de chaves garantida pelo compilador via `ptBR: Copy`; revisão contra o glossário achou só três ajustes de regência; posts reais seguem em inglês por decisão.
+- [Metadados e SEO por idioma](issues/07-metadados-por-idioma.md) — `applyMetadata(locale)` chamada por efeito do provider (a troca não recarrega); textos em `copy.meta`, para um idioma novo seguir sendo um arquivo novo; URLs absolutas de `canonical`/`hreflang`/`og:url` derivadas de `window.location.origin`, porque o repositório não declara domínio de produção.
 - [Worker em pt-BR: labels e prompt do Grok](issues/08-worker-pt-br.md) — `locale` opcional validado contra a lista fechada; `LABELS` por idioma; nome pedido ao Grok no idioma ativo.
 
 ## Not yet specified
