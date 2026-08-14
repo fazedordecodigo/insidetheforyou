@@ -5,6 +5,13 @@ description: End-to-end browser testing of the insidetheforyou React/Vite SPA, w
 
 # Testing the insidetheforyou SPA (i18n / routing / responsive)
 
+## Prerequisite: the i18n layer must be in the working tree
+Everything below describes the bilingual site (`src/i18n/`, `LocaleProvider`, the EN|PT toggle, `/pt-br`,
+the `hreflang` tags). That layer arrives with the i18n stack (PRs #1–#8). On plain `main` it does not
+exist yet — `src/` has only `App.tsx`, `main.tsx`, `components/` and `sections/`, and `index.html` has
+no `canonical`/`hreflang` — so the recipes are not executable there. Check that `src/i18n/locale.ts`
+exists before starting; if it does not, test the branch that carries the i18n slice instead of `main`.
+
 ## Running the app
 - `npm install` then `npm run dev` → Vite on `http://localhost:5173`.
 - Production-build verification: `npm run build` (tsc + vite build) then `npm run preview` → Vite serves
@@ -20,6 +27,8 @@ description: End-to-end browser testing of the insidetheforyou React/Vite SPA, w
   `vite.config.ts`, which needs `XAI_API_KEY` (env var or `.env`) — so with the key present the button
   works on the dev server, and a failure there is a real finding. Under `npm run preview` the route does
   not exist at all (the plugin is dev-server only), so a failing request there is expected, not a bug.
+  Non-POST requests to `/api/name` answer 405 by design (the Worker does the same), so a 405 in the
+  console after poking the URL by hand is not a finding.
 
 ## Locale model (as of the first i18n slice)
 - `/` = English, `/pt-br` = Portuguese. Preference persisted in `localStorage` under
@@ -70,11 +79,20 @@ Check visually (zoom) in: Score Lab pills + post score, annotated feed annotatio
 sliders + ranked scores, and the Adjustments slide marks (those marks live as literal strings in the
 dictionaries, e.g. `diversityMarks: ['×1,0','×0,5','×0,25','×0,25']`).
 Known gap to re-check on every slice: any component that formats numbers with raw `toFixed()` instead
-of `useFormat()` will keep a **dot** in pt-BR. Past instance (already fixed with
-`num(p * 100, { digits: 1 })`): the Deep Dive "Predictions" / "Previsões" slide in `src/App.tsx` used to
-render `31.0%` in pt-BR. Grep for `toFixed(` / `%` templates in `src/App.tsx` and `src/sections/*` and
-eyeball those surfaces in **both** locales — checking only pt-BR would miss a formatter pinned to a
-fixed locale.
+of `useFormat()` will keep a **dot** in pt-BR. Start from `git grep -n 'toFixed(' src/` and verify every
+hit renders through `num`/`signed`. Pre-i18n `main` has four raw call sites, and they are exactly the
+surfaces to eyeball in **both** locales once the i18n slice is applied (checking only pt-BR would miss a
+formatter pinned to a fixed locale):
+
+| Call site on `main`                | Surface                                | pt-BR must show |
+| ---------------------------------- | -------------------------------------- | --------------- |
+| `src/App.tsx` `(p * 100).toFixed(1)` | Deep Dive "Predictions" / "Previsões" | `31,0%`         |
+| `src/sections/DemoFeed.tsx` `p.score.toFixed(1)` | annotated feed scores     | `+2,6`          |
+| `src/sections/ScoreLab.tsx` `score.toFixed(2)` | Score Lab post score        | `+2,59`         |
+| `src/sections/WeightLab.tsx` `p.score.toFixed(2)` | ranked list scores       | `+2,59`         |
+
+One surviving `toFixed` is fine: `signed(Number(score.toFixed(2)))` in Score Lab only rounds before
+`signed()` localises. A `toFixed` result rendered directly is the bug.
 
 ## Grok name cache and locale
 The Weight Playground default algorithm name comes from `copy.weightLab.defaultName` (EN
