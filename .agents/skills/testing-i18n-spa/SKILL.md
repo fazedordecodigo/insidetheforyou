@@ -15,9 +15,11 @@ description: End-to-end browser testing of the insidetheforyou React/Vite SPA, w
   toggle, and report the missing fallback as a finding.
 - Prefer running the final both-languages check against the preview build at least once: everything else
   (dev server) does not exercise minified/chunked production output.
-- `POST /api/name` (the "Ask Grok" button in the Weight Playground) is a Cloudflare Worker route and
-  does **not** exist under `npm run dev`. A failing request there is expected locally, not a bug —
-  it needs `wrangler dev` plus `XAI_API_KEY`.
+- `POST /api/name` (the "Ask Grok" button in the Weight Playground) is served in production by the
+  Cloudflare Worker, and under `npm run dev` it is emulated by the `devNameApi` plugin in
+  `vite.config.ts`, which needs `XAI_API_KEY` (env var or `.env`) — so with the key present the button
+  works on the dev server, and a failure there is a real finding. Under `npm run preview` the route does
+  not exist at all (the plugin is dev-server only), so a failing request there is expected, not a bug.
 
 ## Locale model (as of the first i18n slice)
 - `/` = English, `/pt-br` = Portuguese. Preference persisted in `localStorage` under
@@ -143,4 +145,4 @@ slider → ranked list reorders and score labels change), Deep Dive slideshow (t
 "The pipeline" / "Two worlds" / ... swaps the slide).
 
 ## Devin Secrets Needed
-- `XAI_API_KEY` — only if you need the `POST /api/name` Worker route; not required for UI testing.
+- `XAI_API_KEY` — only if you need `POST /api/name` (dev server or Worker); not required for UI testing.
