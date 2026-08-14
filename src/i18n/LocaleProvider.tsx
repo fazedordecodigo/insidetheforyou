@@ -5,7 +5,6 @@ import {
   DICTIONARIES,
   localeFromPath,
   pathForLocale,
-  readStoredLocale,
   resolveInitialLocale,
   storeLocale,
   type Locale,
@@ -37,9 +36,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     }
   }, [locale])
 
+  // History entries carry their own locale: going back to the root means the
+  // default locale, not the preference stored by a later switch.
   useEffect(() => {
     const onPopState = () => {
-      setLocaleState(localeFromPath(window.location.pathname) ?? readStoredLocale() ?? DEFAULT_LOCALE)
+      setLocaleState(localeFromPath(window.location.pathname) ?? DEFAULT_LOCALE)
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
