@@ -48,7 +48,9 @@ copy lives in typed dictionaries under `src/i18n/`, and `en` is the source of tr
 
 How the active language is resolved, in order:
 
-1. The path, when it names a language (`/pt-br`). This always wins, so a shared link keeps its language.
+1. The path, when it names a language (`/pt-br`). A link to `/pt-br` always opens in Portuguese, whatever
+   the visitor's browser or stored preference says. The root path names no language, so `/` falls through
+   to the steps below and can render Portuguese.
 2. The visitor's explicit choice, stored in `localStorage` under `insidetheforyou.locale`.
 3. `navigator.languages`. A visitor whose browser prefers Portuguese lands on `/pt-br`.
 
