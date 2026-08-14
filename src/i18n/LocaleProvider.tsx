@@ -46,9 +46,13 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
+  // Only a real change pushes history, so clicking the active locale is a no-op
+  // for the back button.
   const setLocale = useCallback((next: Locale) => {
     storeLocale(next)
-    window.history.pushState(null, '', urlForLocale(next))
+    if (window.location.pathname !== pathForLocale(next)) {
+      window.history.pushState(null, '', urlForLocale(next))
+    }
     setLocaleState(next)
   }, [])
 
