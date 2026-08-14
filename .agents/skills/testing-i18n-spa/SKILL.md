@@ -77,8 +77,8 @@ swallowed. Use DevTools device mode instead:
 number it renders must show a **comma** decimal separator (`+0,5`, `-58,8`, `+2,59`, `×0,75`).
 Check visually (zoom) in: Score Lab pills + post score, annotated feed annotations, Weight Playground
 sliders + ranked scores, and the Adjustments slide marks (those marks live as literal strings in the
-pt-BR dictionary, e.g. `diversityMarks: ['×1,0','×0,5','×0,25','×0,25']` — the repeated `×0,25` is not
-a typo, it is the floor: the same author's posts halve to `×0,25` and stay there; the dotted
+pt-BR dictionary, e.g. `diversityMarks: ['×1,0','×0,5','×0,25','×0,25']` — the repeated `×0,25` is
+not a typo, it is the floor: the same author's posts halve to `×0,25` and stay there; the dotted
 `['×1.0','×0.5','×0.25','×0.25']` you see hardcoded in `Adjustments.tsx` on pre-i18n `main` is the same
 list before the extraction).
 Known gap to re-check on every slice: any component that formats numbers with raw `toFixed()` instead
