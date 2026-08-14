@@ -1,22 +1,24 @@
-import { en, type Copy } from './en'
-import { ptBR } from './pt-BR'
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  LOCALE_PATHS,
+  isLocale,
+  type Locale,
+} from '../../shared/locales.ts'
 
-export const LOCALES = ['en', 'pt-BR'] as const
-
-export type Locale = (typeof LOCALES)[number]
-
-export const DEFAULT_LOCALE: Locale = 'en'
-
-export const DICTIONARIES: Record<Locale, Copy> = {
-  en,
-  'pt-BR': ptBR,
-}
-
-// The path that serves each locale. The default locale lives at the root.
-export const LOCALE_PATHS: Record<Locale, string> = {
-  en: '/',
-  'pt-BR': '/pt-br',
-}
+// The locale list, paths and SEO origin are shared with the Worker and the build,
+// and re-exported so the app has a single import for everything locale-related.
+export {
+  DEFAULT_LOCALE,
+  LOCALES,
+  LOCALE_OG_TAGS,
+  LOCALE_PATHS,
+  SITE_URL,
+  absoluteUrlForLocale,
+  pathForLocale,
+  type Locale,
+} from '../../shared/locales.ts'
+export { DICTIONARIES } from './dictionaries.ts'
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'EN',
@@ -28,17 +30,7 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   'pt-BR': 'Português (Brasil)',
 }
 
-// Open Graph wants an underscore territory tag, not the BCP 47 one.
-export const LOCALE_OG_TAGS: Record<Locale, string> = {
-  en: 'en_US',
-  'pt-BR': 'pt_BR',
-}
-
 const STORAGE_KEY = 'insidetheforyou.locale'
-
-function isLocale(value: string | null): value is Locale {
-  return value !== null && (LOCALES as readonly string[]).includes(value)
-}
 
 function normalize(pathname: string): string {
   const trimmed = pathname.replace(/\/+$/, '').toLowerCase()
@@ -51,10 +43,6 @@ export function localeFromPath(pathname: string): Locale | null {
   const path = normalize(pathname)
   const match = LOCALES.find((locale) => locale !== DEFAULT_LOCALE && LOCALE_PATHS[locale] === path)
   return match ?? null
-}
-
-export function pathForLocale(locale: Locale): string {
-  return LOCALE_PATHS[locale]
 }
 
 export function readStoredLocale(): Locale | null {

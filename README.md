@@ -62,19 +62,36 @@ back button walks through the languages you actually visited.
 
 1. Create `src/i18n/<locale>.ts` that copies the structure of `en.ts` and declares the type:
    `export const es: Copy = { ... }`. The compiler lists every key you still owe.
-2. Register the locale in `src/i18n/locale.ts`: add the tag to `LOCALES`, the path to `LOCALE_PATHS`
-   (e.g. `es: '/es'`), the short button label to `LOCALE_LABELS`, the language's own name to
-   `LOCALE_NAMES`, the Open Graph tag to `LOCALE_OG_TAGS`, the dictionary to `DICTIONARIES`, and the
-   language prefix to `detectLocale`.
-3. Register the locale in `shared/name-prompt.ts`, so `POST /api/name` asks Grok for an algorithm name in
+2. Register the locale in `shared/locales.ts`: add the tag to `LOCALES`, the path to `LOCALE_PATHS`
+   (e.g. `es: '/es'`), and the Open Graph tag to `LOCALE_OG_TAGS`. This module holds no DOM code, so it
+   is the one the app, the Worker and the Vite build all import.
+3. Register the locale in `src/i18n/locale.ts` and `src/i18n/dictionaries.ts`: the short button label in
+   `LOCALE_LABELS`, the language's own name in `LOCALE_NAMES`, the language prefix in `detectLocale`, and
+   the dictionary in `DICTIONARIES`.
+4. Register the locale in `shared/name-prompt.ts`, so `POST /api/name` asks Grok for an algorithm name in
    that language: add the tag to `LOCALES`, the language name Grok is told to write in to `LANGUAGES`
    (e.g. `es: 'Spanish'`), and a table of signal labels to `LABELS`. That module builds the whole xAI
    request and is imported by both the production Worker (`worker/index.ts`) and the dev-server
    emulator (`vite.config.ts`), so there is a single place to edit and `npm run dev` matches production.
 
-Nothing else needs a change: the switcher, the `hreflang` alternates, the metadata, and the number
-formatting all iterate over `LOCALES`. The new path also works with no server change, because
-`wrangler.jsonc` sets `not_found_handling: single-page-application`.
+Nothing else needs a change: the switcher, the `hreflang` alternates, the metadata, the number
+formatting and the build all iterate over `LOCALES`.
+
+### What a crawler sees
+
+A link unfurler does not run JavaScript, so each language needs its metadata in the HTML it is served.
+The `locale-html` plugin in `vite.config.ts` renders the `<head>` block from the dictionaries at build
+time — title, description, `canonical`, `og:url`, `og:image`, `hreflang` — and writes one file per
+non-default language (`dist/pt-br.html`), so `/pt-br` is served with `lang="pt-BR"` and Portuguese tags
+before the app boots. `src/i18n/metadata.ts` then rewrites the same tags on every in-page switch.
+
+Those URLs are absolute and cannot be derived from the request, so the deployed origin is a constant:
+`SITE_URL` in `shared/locales.ts`. The card is `public/og-card.png` (1200×630), generated from
+`scripts/og-card.html` with a headless Chrome screenshot at that viewport.
+
+`/pt-br` is a file rather than `pt-br/index.html` because `wrangler.jsonc` sets
+`html_handling: auto-trailing-slash`, which would redirect `/pt-br` to `/pt-br/` if it were a folder;
+any path with no file still falls through to `not_found_handling: single-page-application`.
 
 ### What stays untranslated on purpose
 
@@ -93,7 +110,10 @@ formatting all iterate over `LOCALES`. The new path also works with no server ch
 | `src/App.tsx` | Page layout, navigation, hero, deep-dive slideshow, and footer |
 | `src/i18n/en.ts` | The English dictionary, and the `Copy` type every language follows |
 | `src/i18n/pt-BR.ts` | The Brazilian Portuguese dictionary |
-| `src/i18n/locale.ts` | The locale list, paths, labels, storage, and browser detection |
+| `shared/locales.ts` | Locale list, paths and SEO origin, free of DOM code so the build can import it |
+| `src/i18n/locale.ts` | Labels, storage, and browser detection, on top of `shared/locales.ts` |
+| `src/i18n/dictionaries.ts` | The `DICTIONARIES` map, imported by the app and by the build |
+| `src/i18n/head.ts` | The static per-language `<head>` the build writes into each HTML file |
 | `src/i18n/LocaleProvider.tsx` | The provider with `useLocale()` and `useCopy()`, plus history handling |
 | `src/i18n/format.ts` | `useFormat()`, locale-aware number formatting |
 | `src/i18n/metadata.ts` | Per-language `<html lang>`, title, description, Open Graph, canonical, hreflang |

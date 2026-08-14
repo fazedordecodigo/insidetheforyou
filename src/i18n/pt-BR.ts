@@ -1,4 +1,4 @@
-import type { Copy } from './en'
+import type { Copy } from './en.ts'
 
 export const ptBR: Copy = {
   meta: {

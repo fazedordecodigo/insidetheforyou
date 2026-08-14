@@ -1,14 +1,10 @@
 // Single source of truth for the POST /api/name request, shared by the Cloudflare
 // Worker (worker/index.ts, production) and the dev-server emulator (vite.config.ts).
-// Keep the locale list in step with src/i18n/locale.ts.
+// The locale list itself lives in ./locales.ts, which the app reads too.
 
-export const LOCALES = ['en', 'pt-BR'] as const
+import { isLocale, type Locale } from './locales.ts'
 
-export type Locale = (typeof LOCALES)[number]
-
-export function isLocale(value: unknown): value is Locale {
-  return LOCALES.includes(value as Locale)
-}
+export { isLocale, type Locale }
 
 const LANGUAGES: Record<Locale, string> = {
   en: 'English',
