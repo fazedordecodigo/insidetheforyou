@@ -4,11 +4,11 @@ import react from '@vitejs/plugin-react'
 
 // In production, the Cloudflare Worker (worker/index.ts) serves /api/name.
 // This plugin emulates that endpoint during `npm run dev` with the local .env key.
-// Keep the language names in step with LANGUAGES in worker/index.ts.
-const LANGUAGES: Record<string, string> = {
-  en: 'English',
-  'pt-BR': 'Brazilian Portuguese',
-}
+// Keep the locales and language names in step with worker/index.ts.
+const LANGUAGES = new Map([
+  ['en', 'English'],
+  ['pt-BR', 'Brazilian Portuguese'],
+])
 
 function devNameApi(): Plugin {
   return {
@@ -40,7 +40,7 @@ function devNameApi(): Plugin {
 
         try {
           const { weights, locale } = JSON.parse(Buffer.concat(chunks).toString('utf8'))
-          const language = LANGUAGES[locale as string] ?? LANGUAGES.en
+          const language = LANGUAGES.get(locale as string) ?? 'English'
           const description = Object.entries(weights as Record<string, number>)
             .map(([id, v]) => `${id} ${v}`)
             .join(', ')
