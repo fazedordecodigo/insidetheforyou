@@ -37,7 +37,7 @@ export const ptBR: Copy = {
   hero: {
     title: 'Como o X decide',
     titleDim: 'o que você vê.',
-    lede: 'Cada vez que você abre o feed For You, um algoritmo monta ele do zero, só para você. Role a página para entender como isso funciona. Você não precisa ser engenheiro.',
+    lede: 'Cada vez que você abre o feed For You, um algoritmo monta esse feed do zero, só para você. Role a página para entender como isso funciona. Você não precisa ser engenheiro.',
     start: 'Começar a rolar ↓',
     source: 'Ler a fonte ↗',
   },
@@ -80,7 +80,7 @@ export const ptBR: Copy = {
       octo: {
         body: 'Um polvo resolvendo uma caixa-enigma em 90 segundos. Repare nos braços trabalhando de forma independente.',
         notes: [
-          '+2,1: você assistiu 3 vídeos de animais até o fim esta semana',
+          '+2,1: você assistiu a 3 vídeos de animais até o fim esta semana',
           'P(assistir) = 0,81: o modelo espera que você termine este também',
         ],
       },
@@ -202,7 +202,7 @@ export const ptBR: Copy = {
     ago: (n: number) => `${n} ações atrás`,
     items: [
       'você curtiu um post sobre F1',
-      'você assistiu um vídeo de receita até o fim',
+      'você assistiu a um vídeo de receita até o fim',
       'você respondeu um amigo',
       'você passou reto por 12 posts de cripto',
       'você marcou “não tenho interesse” em um meme',
