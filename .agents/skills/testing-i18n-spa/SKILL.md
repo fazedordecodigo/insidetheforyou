@@ -77,7 +77,8 @@ swallowed. Use DevTools device mode instead:
 number it renders must show a **comma** decimal separator (`+0,5`, `-58,8`, `+2,59`, `×0,75`).
 Check visually (zoom) in: Score Lab pills + post score, annotated feed annotations, Weight Playground
 sliders + ranked scores, and the Adjustments slide marks (those marks live as literal strings in the
-dictionaries, e.g. `diversityMarks: ['×1,0','×0,5','×0,25','×0,25']`).
+dictionaries, e.g. `diversityMarks: ['×1,0','×0,5','×0,25','×0,25']` — the repeated `×0,25` is not a
+typo, it is the floor: the same author's posts halve to `×0,25` and stay there).
 Known gap to re-check on every slice: any component that formats numbers with raw `toFixed()` instead
 of `useFormat()` will keep a **dot** in pt-BR. Start from `git grep -n 'toFixed(' src/` and verify every
 hit renders through `num`/`signed`. Pre-i18n `main` has four raw call sites, and they are exactly the
@@ -124,7 +125,9 @@ window.snap = () => {
     alternates: [...document.head.querySelectorAll('link[rel=alternate]')]
       .map(l => `${l.hreflang} -> ${l.href} [marked=${l.hasAttribute('data-locale-alternate')}]`),
     counts: { ogTitle: dup('meta[property="og:title"]'), desc: dup('meta[name=description]'),
-      canonical: dup('link[rel=canonical]'), alternate: dup('link[rel=alternate]'),
+      canonical: dup('link[rel=canonical]'),
+      alternate: dup('link[rel=alternate][data-locale-alternate]'),
+      alternateAny: dup('link[rel=alternate]'),
       titleTag: document.head.querySelectorAll('title').length },
   }
 }
@@ -134,7 +137,9 @@ window.show = () => console.log(JSON.stringify(window.snap(), null, 1))
 Checklist per slice: `/` → `en` / `en_US` / canonical `<origin>/`; `/pt-br` → `pt-BR` / `pt_BR` /
 canonical `<origin>/pt-br`; the same after switching with the toggle (no reload) and after Back/Forward;
 and after 4–5 switches every `counts` value must stay `1` with `alternate: 3` (the writer must reuse the
-static `index.html` tags instead of appending duplicates). Absolute URLs derive from
+static `index.html` tags instead of appending duplicates). `alternate` counts only the writer's own tags
+(`[data-locale-alternate]`), so an unrelated `link[rel=alternate]` added later — an RSS feed, say — moves
+`alternateAny` without breaking the check; a gap between the two numbers is information, not a failure. Absolute URLs derive from
 `window.location.origin`, so in dev they read `http://localhost:5173/...` — that is expected, not a bug.
 
 Tooling notes: typing in the console only works while the console prompt has focus — after clicking a
