@@ -4,6 +4,12 @@ import react from '@vitejs/plugin-react'
 
 // In production, the Cloudflare Worker (worker/index.ts) serves /api/name.
 // This plugin emulates that endpoint during `npm run dev` with the local .env key.
+// Keep the language names in step with LANGUAGES in worker/index.ts.
+const LANGUAGES: Record<string, string> = {
+  en: 'English',
+  'pt-BR': 'Brazilian Portuguese',
+}
+
 function devNameApi(): Plugin {
   return {
     name: 'dev-name-api',
@@ -33,7 +39,8 @@ function devNameApi(): Plugin {
         for await (const chunk of req) chunks.push(chunk as Buffer)
 
         try {
-          const { weights } = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+          const { weights, locale } = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+          const language = LANGUAGES[locale as string] ?? LANGUAGES.en
           const description = Object.entries(weights as Record<string, number>)
             .map(([id, v]) => `${id} ${v}`)
             .join(', ')
@@ -47,8 +54,7 @@ function devNameApi(): Plugin {
               messages: [
                 {
                   role: 'system',
-                  content:
-                    'You name custom social feed ranking algorithms based on their engagement weights. Respond with ONLY a short, funny, memorable name of 2 to 4 words. No quotes, no punctuation at the end, no explanation.',
+                  content: `You name custom social feed ranking algorithms based on their engagement weights. Respond with ONLY a short, funny, memorable name of 2 to 4 words, written in ${language}. No quotes, no punctuation at the end, no explanation.`,
                 },
                 {
                   role: 'user',
