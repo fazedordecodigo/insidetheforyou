@@ -77,8 +77,10 @@ swallowed. Use DevTools device mode instead:
 number it renders must show a **comma** decimal separator (`+0,5`, `-58,8`, `+2,59`, `×0,75`).
 Check visually (zoom) in: Score Lab pills + post score, annotated feed annotations, Weight Playground
 sliders + ranked scores, and the Adjustments slide marks (those marks live as literal strings in the
-dictionaries, e.g. `diversityMarks: ['×1,0','×0,5','×0,25','×0,25']` — the repeated `×0,25` is not a
-typo, it is the floor: the same author's posts halve to `×0,25` and stay there).
+pt-BR dictionary, e.g. `diversityMarks: ['×1,0','×0,5','×0,25','×0,25']` — the repeated `×0,25` is not
+a typo, it is the floor: the same author's posts halve to `×0,25` and stay there; the dotted
+`['×1.0','×0.5','×0.25','×0.25']` you see hardcoded in `Adjustments.tsx` on pre-i18n `main` is the same
+list before the extraction).
 Known gap to re-check on every slice: any component that formats numbers with raw `toFixed()` instead
 of `useFormat()` will keep a **dot** in pt-BR. Start from `git grep -n 'toFixed(' src/` and verify every
 hit renders through `num`/`signed`. Pre-i18n `main` has four raw call sites, and they are exactly the
@@ -113,7 +115,9 @@ Clicking the **already active** locale must not `pushState` (no duplicate entrie
 writer **reuses** (it queries before creating), but it ships **no** `canonical` and **no** `alternate`.
 The alternates are a special case: `applyMetadata` deletes every `link[data-locale-alternate]` and
 recreates the three, marked, on each call — so all three carrying the marker is the invariant to assert,
-and an unmarked `link[rel=alternate]` in the `<head>` means someone else put it there.
+and an unmarked `link[rel=alternate]` in the `<head>` means someone else put it there. That reading of
+the writer comes from the SEO branch while it was still unmerged, so re-read `metadata.ts` before
+trusting it — if the implementation landed differently, fix this section instead of the app.
 None of this is visible on screen, so measure it from the DevTools console. Define a snapshot helper
 once per page load (it is lost on reload) and call it after each navigation/switch:
 
@@ -140,12 +144,14 @@ window.show = () => console.log(JSON.stringify(window.snap(), null, 1))
 
 Checklist per slice: `/` → `en` / `en_US` / canonical `<origin>/`; `/pt-br` → `pt-BR` / `pt_BR` /
 canonical `<origin>/pt-br`; the same after switching with the toggle (no reload) and after Back/Forward;
-and after 4–5 switches every `counts` value must stay `1` with `alternate: 3` (the writer must reuse the
-static `index.html` tags instead of appending duplicates). `alternate` counts only the writer's own
-tags (`[data-locale-alternate]`), so an unrelated `link[rel=alternate]` — an RSS feed, say — moves
-`alternateAny` without breaking the check; a gap between the two numbers is information, not a
-failure. `alternate: 0` with `alternateAny: 3` is a real failure, though: it means the writer stopped
-marking its tags, and the marker is what it uses to clean up stale ones between locale switches.
+and after 4–5 switches the counters must read `ogTitle: 1`, `desc: 1`, `titleTag: 1`, `canonical: 1`,
+`alternate: 3` and `alternateAny: >= 3` — anything higher on the singletons means the writer is
+appending instead of reusing. `alternate` counts only the writer's own tags
+(`[data-locale-alternate]`), so an unrelated `link[rel=alternate]` — an RSS feed, say — moves only
+`alternateAny`, which is why it has no exact expected value; a gap between the two numbers is
+information, not a failure. `alternate: 0` with `alternateAny: 3` is a real failure, though: it means
+the writer stopped marking its tags, and the marker is what it uses to clean up stale ones between
+locale switches.
 Absolute URLs derive from `window.location.origin`, so in dev they read `http://localhost:5173/...` —
 that is expected, not a bug.
 
