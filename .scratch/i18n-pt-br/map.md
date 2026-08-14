@@ -33,6 +33,15 @@ O site serve inglês e português do Brasil completos, com troca de idioma persi
 - [Escrever a tradução pt-BR completa](issues/06-traducao-pt-br.md) — paridade de chaves garantida pelo compilador via `ptBR: Copy`; revisão contra o glossário achou só três ajustes de regência; posts reais seguem em inglês por decisão.
 - [Metadados e SEO por idioma](issues/07-metadados-por-idioma.md) — `applyMetadata(locale)` chamada por efeito do provider (a troca não recarrega); textos em `copy.meta`, para um idioma novo seguir sendo um arquivo novo; URLs absolutas de `canonical`/`hreflang`/`og:url` derivadas de `window.location.origin`, porque o repositório não declara domínio de produção.
 - [Worker em pt-BR: labels e prompt do Grok](issues/08-worker-pt-br.md) — `locale` opcional validado contra a lista fechada; `LABELS` por idioma; nome pedido ao Grok no idioma ativo.
+- [Documentar como acrescentar um idioma](issues/10-documentar-como-adicionar-idioma.md) — seção "Languages" no README com a resolução do idioma, o passo a passo em três etapas e, principalmente, o que *não* precisa mudar (switcher, hreflang, metadados e `useFormat()` iteram sobre `LOCALES`).
+- [Verificação end-to-end das duas versões](issues/09-verificacao-dois-idiomas.md) — verde no build de produção (`npm run preview`), incluindo os dois casos que exigem F5 real: persistência da preferência e precedência path → `localStorage` → `navigator.languages`; `POST /api/name` e o fallback do Worker publicado ficaram fora por falta de ambiente.
+
+## Destino alcançado
+
+Os dez tickets estão fechados. O site serve inglês em `/` e pt-BR em `/pt-br`, com troca persistente sem
+recarregar, e acrescentar um idioma é acrescentar um arquivo mais os registros listados no README. O que
+sobra não é execução deste mapa, e sim duas verificações que exigem ambiente que esta sessão não tinha:
+`POST /api/name` com `XAI_API_KEY` e o fallback de SPA do Worker publicado em `/pt-br`.
 
 ## Not yet specified
 
