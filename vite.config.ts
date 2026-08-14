@@ -4,10 +4,26 @@ import react from '@vitejs/plugin-react'
 
 // In production, the Cloudflare Worker (worker/index.ts) serves /api/name.
 // This plugin emulates that endpoint during `npm run dev` with the local .env key.
-// Keep the locales and language names in step with worker/index.ts.
+// Keep the locales, language names and weight bounds in step with worker/index.ts.
 const LANGUAGES = new Map([
   ['en', 'English'],
   ['pt-BR', 'Brazilian Portuguese'],
+])
+
+const DEFAULTS = new Map([
+  ['like', 0.5],
+  ['reply', 5],
+  ['repost', 1],
+  ['quote', 5],
+  ['share', 2],
+  ['copyLink', 20],
+  ['follow', 4],
+  ['click', 0.4],
+  ['video', 0.05],
+  ['notInterested', -43.2],
+  ['block', -31.2],
+  ['mute', -58.8],
+  ['report', -234],
 ])
 
 function devNameApi(): Plugin {
@@ -40,10 +56,28 @@ function devNameApi(): Plugin {
 
         try {
           const { weights, locale } = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+          if (locale !== undefined && !LANGUAGES.has(locale as string)) {
+            res.statusCode = 400
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'invalid locale' }))
+            return
+          }
           const language = LANGUAGES.get(locale as string) ?? 'English'
-          const description = Object.entries(weights as Record<string, number>)
-            .map(([id, v]) => `${id} ${v}`)
-            .join(', ')
+
+          // Only the known knobs, as numbers, within sane bounds.
+          const clean = new Map<string, number>()
+          for (const id of DEFAULTS.keys()) {
+            const v = (weights as Record<string, unknown> | undefined)?.[id]
+            if (typeof v !== 'number' || !Number.isFinite(v) || v < -600 || v > 60) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ error: `invalid weight: ${id}` }))
+              return
+            }
+            clean.set(id, v)
+          }
+
+          const description = [...clean].map(([id, v]) => `${id} ${v}`).join(', ')
           const upstream = await fetch('https://api.x.ai/v1/chat/completions', {
             method: 'POST',
             headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
