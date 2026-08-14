@@ -2,7 +2,7 @@ import { useState, type ComponentType } from 'react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
 import { Reveal, Section } from './components/Reveal'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
-import { useCopy, useLocale, type Copy } from './i18n'
+import { useCopy, useFormat, useLocale, type Copy } from './i18n'
 import { ScoreLab } from './sections/ScoreLab'
 import { Adjustments } from './sections/Adjustments'
 import { Weights } from './sections/Weights'
@@ -258,6 +258,7 @@ const PREDICTION_ODDS = [0.31, 0.04, 0.07, 0.42, 0.01, 0.002]
 
 function Predictions() {
   const copy = useCopy()
+  const { num } = useFormat()
   const probs: [string, number][] = copy.predictions.probs.map((label, i) => [
     label,
     PREDICTION_ODDS[i],
@@ -285,7 +286,7 @@ function Predictions() {
                 style={{ height: '100%', background: '#fff' }}
               />
             </div>
-            <span className="weight-value">{(p * 100).toFixed(1)}%</span>
+            <span className="weight-value">{num(p * 100, { digits: 1 })}%</span>
           </div>
         ))}
       </div>
