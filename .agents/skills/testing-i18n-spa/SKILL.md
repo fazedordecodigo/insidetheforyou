@@ -7,10 +7,10 @@ description: End-to-end browser testing of the insidetheforyou React/Vite SPA, w
 
 ## Prerequisite: the i18n layer must be in the working tree
 Everything below describes the bilingual site (`src/i18n/`, `LocaleProvider`, the EN|PT toggle, `/pt-br`,
-the `hreflang` tags). That layer arrives with the i18n stack (PRs #1–#8). On plain `main` it does not
-exist yet — `src/` has only `App.tsx`, `main.tsx`, `components/` and `sections/`, and `index.html` has
-no `canonical`/`hreflang` — so the recipes are not executable there. Check that `src/i18n/locale.ts`
-exists before starting; if it does not, test the branch that carries the i18n slice instead of `main`.
+the `hreflang` tags). That layer arrives with the i18n stack, whose PRs are still open, so on `main` it
+does not exist yet — `src/` has only `App.tsx`, `main.tsx`, `components/` and `sections/`, and
+`index.html` has no `canonical`/`hreflang`, which makes the recipes below unexecutable there. Check that
+`src/i18n/locale.ts` exists before starting; if it does not, test the branch carrying the i18n slice.
 
 ## Running the app
 - `npm install` then `npm run dev` → Vite on `http://localhost:5173`.
@@ -108,8 +108,12 @@ Clicking the **already active** locale must not `pushState` (no duplicate entrie
 ## Per-locale `<head>` metadata (SEO slice)
 `src/i18n/metadata.ts` (`applyMetadata(locale)`, called from a `useEffect` in `LocaleProvider`) rewrites
 `documentElement.lang`, `document.title`, `meta[name=description]`, the `og:*` / `twitter:*` tags,
-`link[rel=canonical]` and three `link[rel=alternate][hreflang]` (`en`, `pt-BR`, `x-default`, all tagged
-with `data-locale-alternate`). `index.html` ships an English baseline for non-JS crawlers.
+`link[rel=canonical]` and three `link[rel=alternate][hreflang]` (`en`, `pt-BR`, `x-default`).
+`index.html` ships an English baseline of `title`/`description`/`og:*` for non-JS crawlers, which the
+writer **reuses** (it queries before creating), but it ships **no** `canonical` and **no** `alternate`.
+The alternates are a special case: `applyMetadata` deletes every `link[data-locale-alternate]` and
+recreates the three, marked, on each call — so all three carrying the marker is the invariant to assert,
+and an unmarked `link[rel=alternate]` in the `<head>` means someone else put it there.
 None of this is visible on screen, so measure it from the DevTools console. Define a snapshot helper
 once per page load (it is lost on reload) and call it after each navigation/switch:
 
@@ -137,10 +141,13 @@ window.show = () => console.log(JSON.stringify(window.snap(), null, 1))
 Checklist per slice: `/` → `en` / `en_US` / canonical `<origin>/`; `/pt-br` → `pt-BR` / `pt_BR` /
 canonical `<origin>/pt-br`; the same after switching with the toggle (no reload) and after Back/Forward;
 and after 4–5 switches every `counts` value must stay `1` with `alternate: 3` (the writer must reuse the
-static `index.html` tags instead of appending duplicates). `alternate` counts only the writer's own tags
-(`[data-locale-alternate]`), so an unrelated `link[rel=alternate]` added later — an RSS feed, say — moves
-`alternateAny` without breaking the check; a gap between the two numbers is information, not a failure. Absolute URLs derive from
-`window.location.origin`, so in dev they read `http://localhost:5173/...` — that is expected, not a bug.
+static `index.html` tags instead of appending duplicates). `alternate` counts only the writer's own
+tags (`[data-locale-alternate]`), so an unrelated `link[rel=alternate]` — an RSS feed, say — moves
+`alternateAny` without breaking the check; a gap between the two numbers is information, not a
+failure. `alternate: 0` with `alternateAny: 3` is a real failure, though: it means the writer stopped
+marking its tags, and the marker is what it uses to clean up stale ones between locale switches.
+Absolute URLs derive from `window.location.origin`, so in dev they read `http://localhost:5173/...` —
+that is expected, not a bug.
 
 Tooling notes: typing in the console only works while the console prompt has focus — after clicking a
 page element (e.g. the EN/PT toggle) click the prompt again before typing. DevTools device mode
