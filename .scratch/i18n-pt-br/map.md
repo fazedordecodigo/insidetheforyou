@@ -25,6 +25,8 @@ O site serve inglês e português do Brasil completos, com troca de idioma persi
 
 <!-- índice: uma linha por ticket fechado -->
 
+- [Núcleo de i18n: contexto, dicionários tipados e resolução de idioma](issues/01-nucleo-i18n.md) — contexto + dicionários tipados por `typeof en` entregues; `/pt-br` só é autoritativo quando o path nomeia o idioma, `/` cede para a preferência salva e depois para o navegador; redirecionamento por `replaceState` (sem recarregar) e troca por `pushState`; `not_found_handling: single-page-application` no Worker.
+
 ## Not yet specified
 
 - Revisão humana da tradução: se a copy longa do deep dive precisa de uma passada de revisão por um falante nativo antes de ir ao ar, e como essa revisão entra no fluxo. Só fica claro quando o pt-BR existir para ser lido.

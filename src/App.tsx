@@ -1,38 +1,41 @@
 import { useState, type ComponentType } from 'react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
 import { Reveal, Section } from './components/Reveal'
+import { LanguageSwitcher } from './components/LanguageSwitcher'
+import { useCopy } from './i18n'
 import { ScoreLab } from './sections/ScoreLab'
 import { Adjustments } from './sections/Adjustments'
 import { Weights } from './sections/Weights'
 import { WeightLab } from './sections/WeightLab'
 import { DemoFeed, ActionEffects } from './sections/DemoFeed'
 
-const NAV = [
-  ['Scoring', '#scoring'],
-  ['Feed', '#feed'],
-  ['Playground', '#playground'],
-  ['Deep dive', '#deepdive'],
-]
-
 function Nav() {
+  const copy = useCopy()
+  const links: [string, string][] = [
+    [copy.nav.scoring, '#scoring'],
+    [copy.nav.feed, '#feed'],
+    [copy.nav.playground, '#playground'],
+    [copy.nav.deepDive, '#deepdive'],
+  ]
   return (
     <div className="nav-bar">
       <div className="nav-inner">
         <a href="#top" className="mono nav-brand">
-          insidetheforyou
+          {copy.nav.brand}
         </a>
         <div className="nav-spacer" />
-        {NAV.map(([label, href]) => (
+        {links.map(([label, href]) => (
           <a key={href} href={href} className="mono nav-link">
             {label}
           </a>
         ))}
+        <LanguageSwitcher />
         <a
           href="https://devin.ai"
           target="_blank"
           rel="noreferrer"
           className="nav-devin"
-          title="Built with Devin"
+          title={copy.nav.devin}
         >
           <img src="/devin.png" alt="Devin" width={18} height={18} />
         </a>
@@ -503,6 +506,7 @@ function DeepDive() {
 }
 
 function Footer() {
+  const copy = useCopy()
   return (
     <footer className="section dark" style={{ borderBottom: 'none' }}>
       <div className="section-inner footer-inner">
@@ -516,14 +520,14 @@ function Footer() {
           }}
         >
           <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em' }}>
-            INSIDETHEFORYOU
+            {copy.footer.brand}
           </span>
           <div style={{ display: 'flex', gap: 24, alignItems: 'center' }} className="small mono">
             <a href="https://github.com/dabit3/insidetheforyou" target="_blank" rel="noreferrer">
-              Source code ↗
+              {copy.footer.sourceCode}
             </a>
             <a href="https://deepwiki.com/xai-org/x-algorithm/" target="_blank" rel="noreferrer">
-              DeepWiki ↗
+              {copy.footer.deepWiki}
             </a>
             <a
               href="https://devin.ai"
@@ -538,13 +542,12 @@ function Footer() {
                 height={16}
                 style={{ filter: 'invert(1)', display: 'block' }}
               />
-              Built with Devin ↗
+              {copy.footer.devin}
             </a>
           </div>
         </div>
         <p className="small" style={{ marginTop: 24, maxWidth: 640 }}>
-          The weights and behaviors on this page come from the open-source X algorithm repository
-          (August 2026 snapshot). The values change over time as X runs experiments.
+          {copy.footer.note}
         </p>
       </div>
     </footer>
