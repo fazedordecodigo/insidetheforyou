@@ -1,46 +1,45 @@
 import { motion } from 'framer-motion'
 import { Reveal, Section } from '../components/Reveal'
+import { useCopy, useFormat, type Copy } from '../i18n'
 
 // Real production weights from home-mixer/params/param.rs (Aug 2026 snapshot)
-const WEIGHTS: [string, number][] = [
-  ['Watch the video', 0.05],
-  ['Open the post', 0.4],
-  ['Like', 0.5],
-  ['Repost', 1.0],
-  ['Share', 2.0],
-  ['Follow the author', 4.0],
-  ['Reply', 5.0],
-  ['Quote', 5.0],
-  ['Share via DM', 5.0],
-  ['Copy the link', 20.0],
-  ['Reply (mutual follow)', 20.0],
-  ['Block the author', -31.2],
-  ['“Not interested”', -43.2],
-  ['Mute the author', -58.8],
-  ['Report', -234.0],
+const WEIGHTS: [keyof Copy['actions'], number][] = [
+  ['video', 0.05],
+  ['click', 0.4],
+  ['like', 0.5],
+  ['repost', 1.0],
+  ['share', 2.0],
+  ['follow', 4.0],
+  ['reply', 5.0],
+  ['quote', 5.0],
+  ['shareDm', 5.0],
+  ['copyLink', 20.0],
+  ['replyMutual', 20.0],
+  ['block', -31.2],
+  ['notInterested', -43.2],
+  ['mute', -58.8],
+  ['report', -234.0],
 ]
 
 const MAX = Math.sqrt(234)
 
 export function Weights() {
+  const copy = useCopy()
+  const { signed } = useFormat()
   return (
     <Section id="weights" theme="light">
       <Reveal>
         <h2 className="display">
-          Every action has <span className="dim">a price tag.</span>
+          {copy.weights.title} <span className="dim">{copy.weights.titleDim}</span>
         </h2>
       </Reveal>
       <Reveal delay={0.1}>
-        <p className="lede">
-          Each predicted action has a fixed weight. The weight shows how much the algorithm cares
-          about that action. These are the real values from the open-source code. The rewards are
-          small, and the punishments are enormous.
-        </p>
+        <p className="lede">{copy.weights.lede}</p>
       </Reveal>
       <div style={{ marginTop: 48, maxWidth: 820 }}>
-        {WEIGHTS.map(([label, w], i) => (
-          <div className="weight-row" key={label}>
-            <span className="weight-label">{label}</span>
+        {WEIGHTS.map(([action, w], i) => (
+          <div className="weight-row" key={action}>
+            <span className="weight-label">{copy.actions[action]}</span>
             <div className="bar-track">
               <motion.div
                 initial={{ width: 0 }}
@@ -57,14 +56,13 @@ export function Weights() {
                 }}
               />
             </div>
-            <span className="weight-value">{w > 0 ? `+${w}` : w}</span>
+            <span className="weight-value">{signed(w)}</span>
           </div>
         ))}
       </div>
       <Reveal delay={0.2}>
         <p className="small" style={{ marginTop: 24 }}>
-          The bars use a square-root scale so that the small weights stay visible. Hatched bars
-          show negative weights. The algorithm tries to not cause these actions.
+          {copy.weights.note}
         </p>
       </Reveal>
     </Section>

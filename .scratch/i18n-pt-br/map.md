@@ -26,11 +26,15 @@ O site serve inglês e português do Brasil completos, com troca de idioma persi
 <!-- índice: uma linha por ticket fechado -->
 
 - [Núcleo de i18n: contexto, dicionários tipados e resolução de idioma](issues/01-nucleo-i18n.md) — contexto + dicionários tipados por `typeof en` entregues; `/pt-br` só é autoritativo quando o path nomeia o idioma, `/` cede para a preferência salva e depois para o navegador; redirecionamento por `replaceState` (sem recarregar) e troca por `pushState`; `not_found_handling: single-page-application` no Worker.
+- [Extrair a copy de App.tsx para o dicionário en](issues/02-extrair-copy-app.md) — ênfase virou par de chaves `title`/`titleDim`; listas e abas do deep dive por chaves estáveis; `Visibility` destaca por posição, não por texto; números dos `Predictions` fora do dicionário.
+- [Extrair a copy de ScoreLab, Weights e Adjustments](issues/03-extrair-copy-scorelab-weights-adjustments.md) — nomes de ação centralizados em `copy.actions` e consumidos pelas três seções; constantes guardam id + peso; valores numéricos por `useFormat()`.
+- [Extrair a copy de DemoFeed, ActionEffects e WeightLab](issues/04-extrair-copy-demofeed-weightlab.md) — posts anotados, tópicos, presets e posts do playground por id; resumo dinâmico com funções no dicionário (plural em pt-BR); posts reais intocados.
+- [Worker em pt-BR: labels e prompt do Grok](issues/08-worker-pt-br.md) — `locale` opcional validado contra a lista fechada; `LABELS` por idioma; nome pedido ao Grok no idioma ativo.
 
 ## Not yet specified
 
-- Revisão humana da tradução: se a copy longa do deep dive precisa de uma passada de revisão por um falante nativo antes de ir ao ar, e como essa revisão entra no fluxo. Só fica claro quando o pt-BR existir para ser lido.
-- Comportamento dos números e datas em pt-BR além de `toLocaleString` (percentuais, separador decimal nas seções interativas) — o alcance real aparece durante a extração da copy.
+- Revisão humana da tradução: a copy pt-BR já foi escrita junto com a extração (tickets 02–04), então o ticket 06 passa a ser revisão, não tradução do zero. Falta decidir se um falante nativo revisa a prosa longa do deep dive antes de ir ao ar.
+- O glossário (ticket 05) ainda não está fechado: as chaves existem em `copy.actions` e os valores pt-BR atuais são uma primeira decisão, não a definitiva.
 
 ## Out of scope
 

@@ -27,7 +27,15 @@ const DEFAULTS: Record<string, number> = {
   report: -234,
 }
 
-const LABELS: Record<string, string> = {
+const LOCALES = ['en', 'pt-BR'] as const
+type Locale = (typeof LOCALES)[number]
+
+const LANGUAGES: Record<Locale, string> = {
+  en: 'English',
+  'pt-BR': 'Brazilian Portuguese',
+}
+
+const LABELS_EN: Record<string, string> = {
   like: 'like',
   reply: 'reply',
   repost: 'repost',
@@ -41,6 +49,27 @@ const LABELS: Record<string, string> = {
   block: 'block',
   mute: 'mute',
   report: 'report',
+}
+
+const LABELS_PT_BR: Record<string, string> = {
+  like: 'curtir',
+  reply: 'responder',
+  repost: 'repostar',
+  quote: 'citar',
+  share: 'compartilhar',
+  copyLink: 'copiar link',
+  follow: 'seguir o autor',
+  click: 'abrir o post',
+  video: 'assistir ao vídeo',
+  notInterested: 'não tenho interesse',
+  block: 'bloquear',
+  mute: 'silenciar',
+  report: 'denunciar',
+}
+
+const LABELS: Record<Locale, Record<string, string>> = {
+  en: LABELS_EN,
+  'pt-BR': LABELS_PT_BR,
 }
 
 async function handleName(request: Request, env: Env): Promise<Response> {
@@ -59,9 +88,19 @@ async function handleName(request: Request, env: Env): Promise<Response> {
   }
 
   let weights: Record<string, unknown>
+  let locale: Locale = 'en'
   try {
-    const body = (await request.json()) as { weights?: Record<string, unknown> }
+    const body = (await request.json()) as {
+      weights?: Record<string, unknown>
+      locale?: unknown
+    }
     weights = body.weights ?? {}
+    if (body.locale !== undefined) {
+      if (!LOCALES.includes(body.locale as Locale)) {
+        return Response.json({ error: 'invalid locale' }, { status: 400 })
+      }
+      locale = body.locale as Locale
+    }
   } catch {
     return Response.json({ error: 'invalid JSON body' }, { status: 400 })
   }
@@ -77,7 +116,7 @@ async function handleName(request: Request, env: Env): Promise<Response> {
   }
 
   const description = Object.keys(DEFAULTS)
-    .map((id) => `${LABELS[id]} ${clean[id]} (default ${DEFAULTS[id]})`)
+    .map((id) => `${LABELS[locale][id]} ${clean[id]} (default ${DEFAULTS[id]})`)
     .join(', ')
 
   const res = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -93,8 +132,7 @@ async function handleName(request: Request, env: Env): Promise<Response> {
       messages: [
         {
           role: 'system',
-          content:
-            'You name custom social feed ranking algorithms based on their engagement weights. Respond with ONLY a short, funny, memorable name of 2 to 4 words. No quotes, no punctuation at the end, no explanation.',
+          content: `You name custom social feed ranking algorithms based on their engagement weights. Respond with ONLY a short, funny, memorable name of 2 to 4 words, written in ${LANGUAGES[locale]}. No quotes, no punctuation at the end, no explanation.`,
         },
         {
           role: 'user',

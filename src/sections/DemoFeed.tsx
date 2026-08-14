@@ -2,18 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal, Section } from '../components/Reveal'
 import realTweets from '../data/tweets.json'
+import { useCopy, useFormat, type Copy } from '../i18n'
 
 type FeedPost = {
-  id: string
+  id: keyof Copy['demoFeed']['posts']
   name: string
   handle: string
   time: string
   initials: string
   color: string
-  body: string
   video?: boolean
   stats: [string, string, string, string]
-  notes: [string, 'good' | 'bad' | 'info'][]
+  noteKinds: ('good' | 'bad' | 'info')[]
 }
 
 const FEED: FeedPost[] = [
@@ -24,13 +24,8 @@ const FEED: FeedPost[] = [
     time: '2h',
     initials: 'SC',
     color: '#6b5b95',
-    body: 'Just shipped the new onboarding flow. Six months of work, live for everyone today.',
     stats: ['214', '186', '2.4K', '148K'],
-    notes: [
-      ['+12.4: you two follow each other, so a likely reply is worth 20 instead of 5', 'good'],
-      ['+0.9: you liked 8 of her last 10 posts', 'good'],
-      ['in-network: served instantly by Thunder', 'info'],
-    ],
+    noteKinds: ['good', 'good', 'info'],
   },
   {
     id: 'priya',
@@ -39,13 +34,8 @@ const FEED: FeedPost[] = [
     time: '5h',
     initials: 'PR',
     color: '#2a9d8f',
-    body: 'The complete guide to pricing your SaaS product. Everything I learned from 40 launches (thread)',
     stats: ['96', '412', '3.1K', '512K'],
-    notes: [
-      ['+4.6: people with your tastes copy this link, and copy-link is worth +20', 'good'],
-      ['×0.75: out-of-network discount applied, it ranked high anyway', 'bad'],
-      ['discovery: found by Phoenix, this account is new to you', 'info'],
-    ],
+    noteKinds: ['good', 'bad', 'info'],
   },
   {
     id: 'octo',
@@ -54,13 +44,9 @@ const FEED: FeedPost[] = [
     time: '7h',
     initials: 'DS',
     color: '#1d6fa3',
-    body: 'An octopus solving a puzzle box in 90 seconds. Watch the arms work independently.',
     video: true,
     stats: ['1.1K', '8.7K', '54K', '2.1M'],
-    notes: [
-      ['+2.1: you watched 3 animal videos to the end this week', 'good'],
-      ['P(watch) = 0.81: the model expects you to finish this one too', 'info'],
-    ],
+    noteKinds: ['good', 'info'],
   },
   {
     id: 'sara2',
@@ -69,12 +55,8 @@ const FEED: FeedPost[] = [
     time: '1h',
     initials: 'SC',
     color: '#6b5b95',
-    body: 'Follow-up: the 5 mistakes we made building it, so you don\u2019t have to.',
     stats: ['58', '44', '890', '61K'],
-    notes: [
-      ['×0.5: second post from Sara this refresh, author diversity decay', 'bad'],
-      ['it still outscored every post below it', 'info'],
-    ],
+    noteKinds: ['bad', 'info'],
   },
 ]
 
@@ -111,18 +93,16 @@ function ViewsIcon() {
 }
 
 export function DemoFeed() {
+  const copy = useCopy()
   return (
     <Section id="feed" theme="dark">
       <Reveal>
         <h2 className="display">
-          Why am I <span className="dim">seeing this?</span>
+          {copy.demoFeed.title} <span className="dim">{copy.demoFeed.titleDim}</span>
         </h2>
       </Reveal>
       <Reveal delay={0.1}>
-        <p className="lede">
-          This is a mock For You feed with the algorithm's reasons pinned to each post. Each
-          position comes from the math that you just learned.
-        </p>
+        <p className="lede">{copy.demoFeed.lede}</p>
       </Reveal>
       <div style={{ marginTop: 48, maxWidth: 720 }}>
         {FEED.map((p, i) => (
@@ -145,7 +125,7 @@ export function DemoFeed() {
                     {p.handle} {p.time}
                   </span>
                 </div>
-                <p className="tweet-body">{p.body}</p>
+                <p className="tweet-body">{copy.demoFeed.posts[p.id].body}</p>
                 {p.video && (
                   <div className="tweet-media">
                     <div className="tweet-play">
@@ -173,8 +153,8 @@ export function DemoFeed() {
               </div>
             </div>
             <div className="feed-notes">
-              {p.notes.map(([text, kind]) => (
-                <div key={text} className={`feed-note ${kind}`}>
+              {copy.demoFeed.posts[p.id].notes.map((text, n) => (
+                <div key={text} className={`feed-note ${p.noteKinds[n]}`}>
                   <span className="feed-note-arrow">↳</span>
                   <span>{text}</span>
                 </div>
@@ -185,26 +165,27 @@ export function DemoFeed() {
       </div>
       <Reveal delay={0.2}>
         <p className="small" style={{ marginTop: 24 }}>
-          X does not show you these annotations, but the ranker computes something like them for
-          each post on each refresh. Nothing in the feed is random.
+          {copy.demoFeed.note}
         </p>
       </Reveal>
     </Section>
   )
 }
 
-type SimActionId = 'like' | 'reply' | 'copyLink' | 'notInterested' | 'mute' | 'report'
+type SimActionId = keyof Copy['actionEffects']['shortActions']
 
-const SIM_ACTIONS: { id: SimActionId; label: string; weight: number; kind: 'good' | 'bad' }[] = [
-  { id: 'like', label: 'Like', weight: 0.5, kind: 'good' },
-  { id: 'reply', label: 'Reply', weight: 5, kind: 'good' },
-  { id: 'copyLink', label: 'Copy link', weight: 20, kind: 'good' },
-  { id: 'notInterested', label: 'Not interested', weight: -43.2, kind: 'bad' },
-  { id: 'mute', label: 'Mute', weight: -58.8, kind: 'bad' },
-  { id: 'report', label: 'Report', weight: -234, kind: 'bad' },
+const SIM_ACTIONS: { id: SimActionId; weight: number; kind: 'good' | 'bad' }[] = [
+  { id: 'like', weight: 0.5, kind: 'good' },
+  { id: 'reply', weight: 5, kind: 'good' },
+  { id: 'copyLink', weight: 20, kind: 'good' },
+  { id: 'notInterested', weight: -43.2, kind: 'bad' },
+  { id: 'mute', weight: -58.8, kind: 'bad' },
+  { id: 'report', weight: -234, kind: 'bad' },
 ]
 
-const TOPIC_RULES: [string, RegExp][] = [
+type TopicId = keyof Copy['actionEffects']['topics']
+
+const TOPIC_RULES: [TopicId, RegExp][] = [
   ['rust', /\brust\b|rustlang|cargo|borrow checker/i],
   ['ai', /\bai\b|vibe.?cod|agent|llm|prompt|grok|claude|chatgpt|copilot|inference|coding is solved/i],
   ['careers', /hiring|interview|junior|senior|resume|leetcode|faang|career|salary|recruiter|job/i],
@@ -213,9 +194,9 @@ const TOPIC_RULES: [string, RegExp][] = [
   ['webdev', /react|javascript|typescript|css|frontend|next\.?js|tailwind|node\b|fullstack|full.?stack/i],
 ]
 
-function topicOf(text: string): string {
+function topicOf(text: string): TopicId {
   for (const [topic, re] of TOPIC_RULES) if (re.test(text)) return topic
-  return 'hot takes'
+  return 'hotTakes'
 }
 
 function truncate(s: string, n: number): string {
@@ -302,7 +283,7 @@ function Avatar({
   )
 }
 
-type SimPost = RealTweet & { topic: string }
+type SimPost = RealTweet & { topic: TopicId }
 
 const CLASSIFIED: SimPost[] = REAL_TWEETS.map((t) => ({ ...t, topic: topicOf(t.text) }))
 
@@ -347,6 +328,8 @@ function drawSim(): { today: SimPost[]; pool: SimPost[] } {
 }
 
 export function ActionEffects() {
+  const copy = useCopy()
+  const { num, signed } = useFormat()
   const [acts, setActs] = useState<Record<string, SimActionId[]>>({})
   const [{ today, pool }] = useState(drawSim)
 
@@ -370,11 +353,11 @@ export function ActionEffects() {
   }
 
   const sim = useMemo(() => {
-    const topicSum: Record<string, number> = {}
-    const topicChips: Record<string, { label: string; w: number }[]> = {}
+    const topicSum: Partial<Record<TopicId, number>> = {}
+    const topicChips: Partial<Record<TopicId, { label: string; w: number }[]>> = {}
     const mutedAuthors = new Set<string>()
-    const dimTopics = new Set<string>()
-    const reportedTopics = new Set<string>()
+    const dimTopics = new Set<TopicId>()
+    const reportedTopics = new Set<TopicId>()
 
     for (const post of today) {
       const taken = acts[keyOf(post)] ?? []
@@ -389,7 +372,7 @@ export function ActionEffects() {
           topicSum[post.topic] = (topicSum[post.topic] ?? 0) + def.weight
           topicChips[post.topic] = [
             ...(topicChips[post.topic] ?? []),
-            { label: def.label.toLowerCase(), w: def.weight },
+            { label: copy.actionEffects.shortActions[def.id].toLowerCase(), w: def.weight },
           ]
         }
       }
@@ -410,41 +393,41 @@ export function ActionEffects() {
       .sort((a, b) => b.score - a.score)
       .slice(0, 7)
 
-    const interests = Object.entries(topicSum)
+    const interests = (Object.entries(topicSum) as [TopicId, number][])
       .filter(([t, s]) => s !== 0 && !reportedTopics.has(t))
-      .map(([t, s]) =>
-        s >= 20 ? `${t} ↑↑` : s > 0 ? `${t} ↑` : s <= -40 ? `${t} ↓↓` : `${t} ↓`
-      )
+      .map(([t, s]) => {
+        const label = copy.actionEffects.topics[t]
+        return s >= 20 ? `${label} ↑↑` : s > 0 ? `${label} ↑` : s <= -40 ? `${label} ↓↓` : `${label} ↓`
+      })
 
     const parts: string[] = []
-    if (interests.length > 0) parts.push(`interests: ${interests.join(', ')}`)
-    if (mutedAuthors.size > 0)
-      parts.push(`muted: ${mutedAuthors.size} author${mutedAuthors.size > 1 ? 's' : ''}`)
+    if (interests.length > 0) parts.push(copy.actionEffects.summary.interests(interests.join(', ')))
+    if (mutedAuthors.size > 0) parts.push(copy.actionEffects.summary.muted(mutedAuthors.size))
     if (reportedTopics.size > 0)
-      parts.push(`report sent: ${[...reportedTopics].join(', ')} buried`)
-    const summary =
-      parts.join(', ') || 'nothing yet. act on a post to start training it.'
+      parts.push(
+        copy.actionEffects.summary.reported(
+          [...reportedTopics].map((t) => copy.actionEffects.topics[t]).join(', '),
+        ),
+      )
+    const summary = parts.join(', ') || copy.actionEffects.summary.idle
 
     return { ranked, summary }
-  }, [acts, today, pool])
+  }, [acts, today, pool, copy])
 
   return (
     <Section theme="light">
       <Reveal>
         <h2 className="display">
-          Every interaction steers <span className="dim">tomorrow's feed.</span>
+          {copy.actionEffects.title} <span className="dim">{copy.actionEffects.titleDim}</span>
         </h2>
       </Reveal>
       <Reveal delay={0.1}>
-        <p className="lede">
-          These are real posts from X. Act on today's feed and watch tomorrow's feed re-rank
-          itself.
-        </p>
+        <p className="lede">{copy.actionEffects.lede}</p>
       </Reveal>
 
       <div className="sim-grid" style={{ marginTop: 48 }}>
         <div>
-          <span className="sim-heading mono">Today: act on these</span>
+          <span className="sim-heading mono">{copy.actionEffects.today}</span>
           {today.map((post) => {
             const taken = acts[keyOf(post)] ?? []
             return (
@@ -463,7 +446,9 @@ export function ActionEffects() {
                         <span className="mono" style={{ fontSize: 11, opacity: 0.45 }}>
                           {post.handle}
                         </span>
-                        <span className="sim-topic mono">{post.topic}</span>
+                        <span className="sim-topic mono">
+                          {copy.actionEffects.topics[post.topic]}
+                        </span>
                       </div>
                       <p style={{ marginTop: 4, fontSize: 13.5, lineHeight: 1.45 }}>
                         {truncate(post.text, 140)}
@@ -478,10 +463,8 @@ export function ActionEffects() {
                       className={`fx-btn ${a.kind} ${taken.includes(a.id) ? 'active' : ''}`}
                       onClick={() => toggle(keyOf(post), a.id)}
                     >
-                      {a.label}{' '}
-                      <span style={{ opacity: 0.55 }}>
-                        {a.weight > 0 ? `+${a.weight}` : a.weight}
-                      </span>
+                      {copy.actionEffects.shortActions[a.id]}{' '}
+                      <span style={{ opacity: 0.55 }}>{signed(a.weight)}</span>
                     </button>
                   ))}
                 </div>
@@ -491,7 +474,7 @@ export function ActionEffects() {
         </div>
 
         <div>
-          <span className="sim-heading mono">Tomorrow: your next refresh</span>
+          <span className="sim-heading mono">{copy.actionEffects.tomorrow}</span>
           <div className="sim-feed">
             <AnimatePresence initial={false}>
               {sim.ranked.map((p, i) => (
@@ -517,7 +500,7 @@ export function ActionEffects() {
                     >
                       <div style={{ display: 'flex', gap: 6, alignItems: 'baseline', flexWrap: 'wrap' }}>
                         <span style={{ fontWeight: 600, fontSize: 12.5 }}>{p.name}</span>
-                        <span className="sim-topic mono">{p.topic}</span>
+                        <span className="sim-topic mono">{copy.actionEffects.topics[p.topic]}</span>
                       </div>
                       <p style={{ fontSize: 12.5, lineHeight: 1.4, opacity: 0.75, marginTop: 2 }}>
                         {truncate(p.text, 80)}
@@ -527,11 +510,14 @@ export function ActionEffects() {
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
                         {p.chips.map((c, ci) => (
                           <span key={ci} className={`sim-chip ${c.w > 0 ? 'good' : 'bad'}`}>
-                            {c.w > 0 ? '+' : ''}
-                            {c.w} {c.label}
+                            {signed(c.w)} {c.label}
                           </span>
                         ))}
-                        {p.dimmed && <span className="sim-chip bad">−5 muted-adjacent</span>}
+                        {p.dimmed && (
+                          <span className="sim-chip bad">
+                            −5 {copy.actionEffects.mutedAdjacent}
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
@@ -540,14 +526,14 @@ export function ActionEffects() {
                     style={{ fontSize: 11.5, opacity: p.score >= 0 ? 0.8 : 0.5, whiteSpace: 'nowrap' }}
                   >
                     {p.score >= 0 ? '+' : ''}
-                    {p.score.toFixed(1)}
+                    {num(p.score, { digits: 1 })}
                   </span>
                 </motion.div>
               ))}
             </AnimatePresence>
             {sim.ranked.length === 0 && (
               <p className="small mono" style={{ padding: 24, opacity: 0.5 }}>
-                you buried everything. tomorrow's feed is empty.
+                {copy.actionEffects.emptyFeed}
               </p>
             )}
           </div>
@@ -556,7 +542,7 @@ export function ActionEffects() {
 
       <div className="sim-summary">
         <span className="sim-heading mono" style={{ marginBottom: 0 }}>
-          What the algorithm learned about you
+          {copy.actionEffects.learned}
         </span>
         <AnimatePresence mode="wait">
           <motion.p
@@ -575,8 +561,7 @@ export function ActionEffects() {
 
       <Reveal delay={0.2}>
         <p className="small" style={{ marginTop: 24 }}>
-          Negative signals are much stronger than positive signals. A few "not interested" taps
-          change your feed faster than one hundred likes.
+          {copy.actionEffects.note}
         </p>
       </Reveal>
     </Section>
