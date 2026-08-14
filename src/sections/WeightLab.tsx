@@ -114,7 +114,8 @@ export function WeightLab() {
   // Naming: the name only changes when the user asks Grok. Moving the knobs
   // never renames on its own. Client-side exponential backoff after the first
   // few calls, and the Worker enforces real rate limits on top of this.
-  const configKey = useMemo(() => JSON.stringify(weights), [weights])
+  // The locale is part of the key: the same knobs get a different name per language.
+  const configKey = useMemo(() => `${locale}:${JSON.stringify(weights)}`, [locale, weights])
   const [name, setName] = useState<string | null>(null)
   const [namedKey, setNamedKey] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
@@ -139,7 +140,10 @@ export function WeightLab() {
   }, [cooldownUntil])
 
   // The current configuration is named when its key matches the last naming.
+  // Switching language invalidates the name, so the default one comes back in
+  // the new language instead of the old name.
   const alreadyNamed = namedKey === configKey
+  const displayName = (alreadyNamed && name) || copy.weightLab.defaultName
 
   const nameIt = async () => {
     if (naming || cooldownLeft > 0 || isDefault || isPreset || alreadyNamed) return
@@ -212,7 +216,7 @@ export function WeightLab() {
           </span>
           <AnimatePresence mode="wait">
             <motion.div
-              key={name ?? copy.weightLab.defaultName}
+              key={displayName}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -220,7 +224,7 @@ export function WeightLab() {
               className="display"
               style={{ fontSize: 'clamp(22px, 3vw, 32px)', marginTop: 4 }}
             >
-              {name ?? copy.weightLab.defaultName}
+              {displayName}
             </motion.div>
           </AnimatePresence>
         </div>
