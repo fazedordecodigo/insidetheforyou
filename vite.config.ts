@@ -1,6 +1,9 @@
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { headTags } from './src/i18n/head.ts'
+import { DEFAULT_LOCALE, LOCALES, pathForLocale } from './shared/locales.ts'
 import {
   describeWeights,
   isLocale,
@@ -87,7 +90,41 @@ function devNameApi(): Plugin {
   }
 }
 
+// Unfurlers and crawlers that do not run JS see only the served HTML, so each locale
+// needs its own file with its own title/description/canonical: `/pt-br` must not be
+// answered with the English baseline. The Worker's SPA fallback still covers every
+// other path.
+function localeHtml(): Plugin {
+  const block = /<!--locale-head(?::[\w-]+)?-->(?:[\s\S]*?<!--\/locale-head-->)?/
+  return {
+    name: 'locale-html',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: (html) => html.replace(block, () => headTags(DEFAULT_LOCALE)),
+    },
+    // The default locale's file is already written at this point, hashed asset tags
+    // included, so the other locales are that same file with their head swapped.
+    writeBundle(options) {
+      const outDir = options.dir
+      if (!outDir) return
+      const base = readFileSync(join(outDir, 'index.html'), 'utf8')
+      for (const locale of LOCALES) {
+        if (locale === DEFAULT_LOCALE) continue
+        const html = base
+          .replace(/<html lang="[^"]*"/, `<html lang="${locale}"`)
+          .replace(block, () => headTags(locale))
+        // `pt-br.html`, not `pt-br/index.html`: with Cloudflare's auto-trailing-slash
+        // handling the folder form makes `/pt-br` redirect to `/pt-br/`, and the
+        // canonical URL must be served directly, not through a hop.
+        const file = join(outDir, `${pathForLocale(locale).replace(/^\//, '')}.html`)
+        mkdirSync(dirname(file), { recursive: true })
+        writeFileSync(file, html)
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), devNameApi()],
+  plugins: [react(), devNameApi(), localeHtml()],
 })

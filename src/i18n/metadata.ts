@@ -3,7 +3,7 @@ import {
   DICTIONARIES,
   LOCALES,
   LOCALE_OG_TAGS,
-  pathForLocale,
+  absoluteUrlForLocale,
   type Locale,
 } from './locale'
 
@@ -30,9 +30,9 @@ function canonical(href: string): void {
   tag.href = href
 }
 
-// The deployed origin is unknown at build time, so the alternates are absolute
-// URLs built from the origin actually serving the page.
-function alternates(origin: string): void {
+// The static block in index.html already carries this set; it is marked the same
+// way so it is replaced here rather than duplicated.
+function alternates(): void {
   for (const stale of document.head.querySelectorAll(`link[${ALTERNATE_MARK}]`)) {
     stale.remove()
   }
@@ -40,7 +40,7 @@ function alternates(origin: string): void {
     const tag = document.createElement('link')
     tag.rel = 'alternate'
     tag.hreflang = hreflang
-    tag.href = `${origin}${pathForLocale(locale)}`
+    tag.href = absoluteUrlForLocale(locale)
     tag.setAttribute(ALTERNATE_MARK, '')
     document.head.appendChild(tag)
   }
@@ -52,7 +52,7 @@ function alternates(origin: string): void {
 // rendered, and the switch happens without a reload, so this runs on each change.
 export function applyMetadata(locale: Locale): void {
   const { meta: copy } = DICTIONARIES[locale]
-  const url = `${window.location.origin}${pathForLocale(locale)}`
+  const url = absoluteUrlForLocale(locale)
 
   document.documentElement.lang = locale
   document.title = copy.title
@@ -67,5 +67,5 @@ export function applyMetadata(locale: Locale): void {
   meta('name', 'twitter:description', copy.description)
 
   canonical(url)
-  alternates(window.location.origin)
+  alternates()
 }

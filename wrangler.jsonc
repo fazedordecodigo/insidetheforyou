@@ -7,7 +7,11 @@
     "directory": "./dist",
     "binding": "ASSETS",
     // Locale paths such as /pt-br are client-side routes, not files.
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    // Serves /pt-br from dist/pt-br.html (the per-locale baseline written by the
+    // locale-html plugin) with no redirect, and leaves every other path to the
+    // SPA fallback above.
+    "html_handling": "auto-trailing-slash"
   },
   "ratelimits": [
     {
