@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Copy } from './en'
+import { applyMetadata } from './metadata'
 import {
   DEFAULT_LOCALE,
   DICTIONARIES,
@@ -34,6 +35,12 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     if (window.location.pathname !== pathForLocale(locale)) {
       window.history.replaceState(null, '', urlForLocale(locale))
     }
+  }, [locale])
+
+  // Title, description, canonical and hreflang follow the rendered locale, not
+  // the static English ones from index.html.
+  useEffect(() => {
+    applyMetadata(locale)
   }, [locale])
 
   // History entries carry their own locale: going back to the root means the

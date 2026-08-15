@@ -1,6 +1,11 @@
-import type { Copy } from './en'
+import type { Copy } from './en.ts'
 
 export const ptBR: Copy = {
+  meta: {
+    title: 'insidetheforyou: como funciona o algoritmo do X',
+    description: 'Um explicador interativo de como o feed For You do X decide o que você vê.',
+    siteName: 'insidetheforyou',
+  },
   nav: {
     brand: 'insidetheforyou',
     scoring: 'Pontuação',
