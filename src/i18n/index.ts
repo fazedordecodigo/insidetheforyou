@@ -13,3 +13,4 @@ export {
 } from './locale'
 export { LocaleProvider, useCopy, useLocale } from './LocaleProvider'
 export { useFormat } from './format'
+export { entriesOf, texts } from './pairing'
