@@ -7,6 +7,9 @@
   // shared/locales.ts). Deploying without it would publish to *.workers.dev while
   // those tags point elsewhere.
   "routes": [{ "pattern": "insidetheforyou.com", "custom_domain": true }],
+  // Keeps that origin the only public host, instead of also answering on
+  // *.workers.dev with the same HTML.
+  "workers_dev": false,
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
