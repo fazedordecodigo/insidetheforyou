@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal, Section } from '../components/Reveal'
-import { useCopy, useFormat, useLocale, type Copy } from '../i18n'
+import { useCopy, useFormat, useLocale, type Copy, type Locale } from '../i18n'
 
 type WeightDef = {
   id: keyof Copy['actions']
@@ -116,12 +116,11 @@ export function WeightLab() {
   // few calls, and the Worker enforces real rate limits on top of this.
   // The locale is part of the key: the same knobs get a different name per language.
   const configKey = useMemo(() => `${locale}:${JSON.stringify(weights)}`, [locale, weights])
-  const [name, setName] = useState<string | null>(null)
-  const [namedKey, setNamedKey] = useState<string | null>(null)
+  const [names, setNames] = useState<Record<string, string>>({})
+  const [last, setLast] = useState<{ locale: Locale; name: string } | null>(null)
   const [naming, setNaming] = useState(false)
   const [cooldownUntil, setCooldownUntil] = useState(0)
   const [now, setNow] = useState(() => Date.now())
-  const nameCache = useRef(new Map<string, string>())
   const callCount = useRef(0)
   const isDefault = WEIGHT_DEFS.every((d) => weights[d.id] === d.def)
   const isPreset = PRESETS.some(([, preset]) =>
@@ -139,20 +138,18 @@ export function WeightLab() {
     return () => clearInterval(interval)
   }, [cooldownUntil])
 
-  // The current configuration is named when its key matches the last naming.
-  // Switching language invalidates the name, so the default one comes back in
-  // the new language instead of the old name.
-  const alreadyNamed = namedKey === configKey
-  const displayName = (alreadyNamed && name) || copy.weightLab.defaultName
+  // A named configuration shows its own name again; any other custom one keeps the
+  // last name the user earned, so moving a knob does not erase it. The default
+  // configuration and the presets are nobody's creation, and a name written in the
+  // previous language does not survive a language switch.
+  const alreadyNamed = configKey in names
+  const displayName =
+    names[configKey] ??
+    (!isDefault && !isPreset && last?.locale === locale ? last.name : null) ??
+    copy.weightLab.defaultName
 
   const nameIt = async () => {
     if (naming || cooldownLeft > 0 || isDefault || isPreset || alreadyNamed) return
-    const cached = nameCache.current.get(configKey)
-    if (cached) {
-      setName(cached)
-      setNamedKey(configKey)
-      return
-    }
     setNaming(true)
     try {
       const res = await fetch('/api/name', {
@@ -165,11 +162,10 @@ export function WeightLab() {
         return
       }
       if (!res.ok) throw new Error(`status ${res.status}`)
-      const data = (await res.json()) as { name?: string }
-      if (data.name) {
-        nameCache.current.set(configKey, data.name)
-        setName(data.name)
-        setNamedKey(configKey)
+      const { name } = (await res.json()) as { name?: string }
+      if (name) {
+        setNames((prev) => ({ ...prev, [configKey]: name }))
+        setLast({ locale, name })
       }
       // First 3 calls are free; after that the wait doubles: 2s, 4s, 8s... up to 60s.
       callCount.current += 1
