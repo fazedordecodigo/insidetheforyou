@@ -12,3 +12,4 @@ export {
   type Locale,
 } from './locale'
 export { LocaleProvider, useCopy, useLocale } from './LocaleProvider'
+export { useFormat } from './format'

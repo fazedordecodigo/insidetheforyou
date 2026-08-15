@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "fetch:tweets": "node scripts/fetch-tweets.mjs"
+    "fetch:tweets": "node scripts/fetch-tweets.mjs",
+    "og:card": "node scripts/og-card.mjs"
   },
   "dependencies": {
     "framer-motion": "^13.1.0",

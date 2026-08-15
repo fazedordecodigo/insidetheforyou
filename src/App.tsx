@@ -2,7 +2,7 @@ import { useState, type ComponentType } from 'react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
 import { Reveal, Section } from './components/Reveal'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
-import { useCopy } from './i18n'
+import { useCopy, useFormat, useLocale, type Copy } from './i18n'
 import { ScoreLab } from './sections/ScoreLab'
 import { Adjustments } from './sections/Adjustments'
 import { Weights } from './sections/Weights'
@@ -45,6 +45,7 @@ function Nav() {
 }
 
 function Hero() {
+  const copy = useCopy()
   return (
     <section id="top" className="section dark">
       <div
@@ -53,21 +54,18 @@ function Hero() {
       >
         <Reveal delay={0.1}>
           <h1 className="display" style={{ maxWidth: 900, fontSize: 'clamp(42px, 6.5vw, 84px)' }}>
-            How X decides
+            {copy.hero.title}
             <br />
-            <span className="dim">what you see.</span>
+            <span className="dim">{copy.hero.titleDim}</span>
           </h1>
         </Reveal>
         <Reveal delay={0.2}>
-          <p className="lede">
-            Each time you open the For You feed, an algorithm builds it from scratch, just for
-            you. Scroll to learn how it works. You do not need an engineering degree.
-          </p>
+          <p className="lede">{copy.hero.lede}</p>
         </Reveal>
         <Reveal delay={0.35}>
           <div style={{ marginTop: 48, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a className="boxlink" href="#scoring">
-              Start scrolling ↓
+              {copy.hero.start}
             </a>
             <a
               className="boxlink"
@@ -75,7 +73,7 @@ function Hero() {
               target="_blank"
               rel="noreferrer"
             >
-              Read the source ↗
+              {copy.hero.source}
             </a>
           </div>
         </Reveal>
@@ -85,27 +83,24 @@ function Hero() {
 }
 
 function Fresh() {
+  const copy = useCopy()
   return (
     <Section id="fresh" theme="light">
       <Reveal>
         <h2 className="display">
-          Your feed is built <span className="dim">fresh, every single time.</span>
+          {copy.fresh.title} <span className="dim">{copy.fresh.titleDim}</span>
         </h2>
       </Reveal>
       <Reveal delay={0.1}>
         <p className="lede">
-          There is no pre-made timeline that waits for you. When you open or refresh the app, a
-          system called <span className="mono">Home Mixer</span> gathers candidate posts, scores
-          them, and filters them in less than a second.
+          {copy.fresh.ledeBefore}
+          <span className="mono">Home Mixer</span>
+          {copy.fresh.ledeAfter}
         </p>
       </Reveal>
       <div style={{ marginTop: 56 }}>
         <div className="cellgrid cols-3">
-          {[
-            ['~3,000', 'candidate posts gathered', 'up to 1,200 from follows + 1,800 from discovery'],
-            ['19+', 'actions predicted per post', 'from “likely to like” to “likely to report”'],
-            ['1', 'ranked feed, just for you', 'rebuilt on every refresh'],
-          ].map(([big, title, sub], i) => (
+          {copy.fresh.stats.map(({ big, title, sub }, i) => (
             <motion.div
               key={title}
               className="cell"
@@ -130,25 +125,23 @@ function Fresh() {
 }
 
 function Sources() {
+  const { locale, copy } = useLocale()
   return (
     <Section id="sources" theme="dark">
       <Reveal>
         <h2 className="display">
-          Posts come from <span className="dim">two worlds.</span>
+          {copy.sources.title} <span className="dim">{copy.sources.titleDim}</span>
         </h2>
       </Reveal>
       <Reveal delay={0.1}>
-        <p className="lede">
-          Before ranking starts, the algorithm collects candidates from accounts that you follow
-          and from the rest of X. Then one model judges them all.
-        </p>
+        <p className="lede">{copy.sources.lede}</p>
       </Reveal>
       <div style={{ marginTop: 48, maxWidth: 760 }}>
         {(
           [
-            ['Thunder: people you follow', 1200],
-            ['Phoenix: ML discovery', 1000],
-            ['SimClusters: taste communities', 800],
+            [copy.sources.thunder, 1200],
+            [copy.sources.phoenix, 1000],
+            [copy.sources.simClusters, 800],
           ] as [string, number][]
         ).map(([label, n], i) => (
           <div className="weight-row" key={label}>
@@ -162,12 +155,11 @@ function Sources() {
                 style={{ height: '100%', background: '#fff' }}
               />
             </div>
-            <span className="weight-value">{n.toLocaleString()}</span>
+            <span className="weight-value">{n.toLocaleString(locale)}</span>
           </div>
         ))}
         <p className="small" style={{ marginTop: 16 }}>
-          This is the maximum number of candidates from each source on each refresh: approximately
-          40% from your follows and 60% from discovery. Then scoring decides what survives.
+          {copy.sources.caps}
         </p>
       </div>
       <div style={{ marginTop: 40 }} className="cellgrid cols-2">
@@ -179,13 +171,12 @@ function Sources() {
           transition={{ duration: 0.6 }}
           style={{ padding: 32 }}
         >
-          <span className="tag">In-network: “Thunder”</span>
+          <span className="tag">{copy.sources.inNetworkTag}</span>
           <h3 className="cell-title" style={{ fontSize: 24 }}>
-            People you follow
+            {copy.sources.inNetworkTitle}
           </h3>
           <p className="small" style={{ marginTop: 8 }}>
-            A live store keeps the most recent posts from each account that you follow. It serves
-            them instantly. This is your familiar circle.
+            {copy.sources.inNetworkBody}
           </p>
         </motion.div>
         <motion.div
@@ -196,20 +187,18 @@ function Sources() {
           transition={{ duration: 0.6, delay: 0.15 }}
           style={{ padding: 32 }}
         >
-          <span className="tag">Out-of-network: “Phoenix” + “SimClusters”</span>
+          <span className="tag">{copy.sources.outNetworkTag}</span>
           <h3 className="cell-title" style={{ fontSize: 24 }}>
-            People you don't (yet)
+            {copy.sources.outNetworkTitle}
           </h3>
           <p className="small" style={{ marginTop: 8, color: 'inherit', opacity: 0.7 }}>
-            ML retrieval maps you and each post into the same “taste space”. Then it finds posts
-            from strangers that look like the content you engage with.
+            {copy.sources.outNetworkBody}
           </p>
         </motion.div>
       </div>
       <Reveal delay={0.2}>
         <p className="small" style={{ marginTop: 24 }}>
-          This is why your feed is not only your follows. Discovery is a built-in feature, not a
-          bug.
+          {copy.sources.note}
         </p>
       </Reveal>
     </Section>
@@ -217,28 +206,17 @@ function Sources() {
 }
 
 function Signals() {
-  const actions = [
-    'liked a post about F1',
-    'watched a cooking video to the end',
-    'replied to a friend',
-    'skipped 12 crypto posts',
-    'hit “not interested” on a meme',
-    "opened someone's profile",
-    'reposted a launch announcement',
-  ]
+  const copy = useCopy()
+  const actions = copy.signals.items
   return (
     <Section id="signals" theme="light">
       <Reveal>
         <h2 className="display">
-          It doesn't read your mind. <span className="dim">It reads your habits.</span>
+          {copy.signals.title} <span className="dim">{copy.signals.titleDim}</span>
         </h2>
       </Reveal>
       <Reveal delay={0.1}>
-        <p className="lede">
-          The most important input to the ranking model is your recent action history. That is the
-          sequence of everything that you engaged with lately. The model reads it like a sentence
-          and predicts your next action.
-        </p>
+        <p className="lede">{copy.signals.lede}</p>
       </Reveal>
       <div style={{ marginTop: 48, maxWidth: 720 }}>
         {actions.map((a, i) => (
@@ -259,15 +237,16 @@ function Signals() {
             }}
           >
             <span style={{ opacity: 0.4 }}>
-              {actions.length - i === 1 ? 'just now' : `${actions.length - i} actions ago`}
+              {actions.length - i === 1
+                ? copy.signals.justNow
+                : copy.signals.ago(actions.length - i)}
             </span>
-            <span>you {a}</span>
+            <span>{a}</span>
           </motion.div>
         ))}
         <Reveal delay={0.4}>
           <p className="small" style={{ marginTop: 24 }}>
-            Each tap teaches the model. Your feed is a mirror of your recent behavior, not a fixed
-            profile of who you are.
+            {copy.signals.note}
           </p>
         </Reveal>
       </div>
@@ -275,27 +254,24 @@ function Signals() {
   )
 }
 
+const PREDICTION_ODDS = [0.31, 0.04, 0.07, 0.42, 0.01, 0.002]
+
 function Predictions() {
-  const probs: [string, number][] = [
-    ['you like it', 0.31],
-    ['you reply', 0.04],
-    ['you repost it', 0.07],
-    ['you watch the video', 0.42],
-    ['you follow the author', 0.01],
-    ['you say “not interested”', 0.002],
-  ]
+  const copy = useCopy()
+  const { num } = useFormat()
+  const probs: [string, number][] = copy.predictions.probs.map((label, i) => [
+    label,
+    PREDICTION_ODDS[i],
+  ])
   return (
     <Section theme="dark">
       <Reveal>
         <h2 className="display">
-          For every post, one question: <span className="dim">“what would you do with this?”</span>
+          {copy.predictions.title} <span className="dim">{copy.predictions.titleDim}</span>
         </h2>
       </Reveal>
       <Reveal delay={0.1}>
-        <p className="lede">
-          A transformer model (the same family of AI that powers chatbots) estimates the
-          probability of each action, good and bad, for each candidate post.
-        </p>
+        <p className="lede">{copy.predictions.lede}</p>
       </Reveal>
       <div style={{ marginTop: 48, maxWidth: 760 }}>
         {probs.map(([label, p], i) => (
@@ -310,14 +286,13 @@ function Predictions() {
                 style={{ height: '100%', background: '#fff' }}
               />
             </div>
-            <span className="weight-value">{(p * 100).toFixed(1)}%</span>
+            <span className="weight-value">{num(p * 100, { digits: 1 })}%</span>
           </div>
         ))}
       </div>
       <Reveal delay={0.3}>
         <p className="small" style={{ marginTop: 24 }}>
-          These numbers are examples for one imaginary post. The model produces a full set like
-          this for each candidate on each refresh.
+          {copy.predictions.note}
         </p>
       </Reveal>
     </Section>
@@ -325,37 +300,22 @@ function Predictions() {
 }
 
 function Visibility() {
-  const rows: [string, string, string][] = [
-    ['Allow', 'The post appears normally.', 'This is the default for almost all posts.'],
-    [
-      'Interstitial',
-      'The post hides behind a warning that you can tap through.',
-      'X uses this for graphic or adult media.',
-    ],
-    [
-      'Drop',
-      'The post never appears for you.',
-      'This applies to blocked authors, policy violations, and spam.',
-    ],
-  ]
+  const copy = useCopy()
   return (
     <Section theme="dark">
       <Reveal>
         <h2 className="display">
-          Ranking picks the order. <span className="dim">A separate gate decides visibility.</span>
+          {copy.visibility.title} <span className="dim">{copy.visibility.titleDim}</span>
         </h2>
       </Reveal>
       <Reveal delay={0.1}>
-        <p className="lede">
-          After ranking, each post goes through a visibility check. The check uses your blocks,
-          your mutes, and safety labels from other systems. It gives one of three answers:
-        </p>
+        <p className="lede">{copy.visibility.lede}</p>
       </Reveal>
       <div style={{ marginTop: 48 }} className="cellgrid cols-3">
-        {rows.map(([verdict, what, why], i) => (
+        {copy.visibility.rows.map(({ verdict, what, why }, i) => (
           <motion.div
             key={verdict}
-            className={`cell ${verdict === 'Drop' ? 'filled' : ''}`}
+            className={`cell ${i === copy.visibility.rows.length - 1 ? 'filled' : ''}`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
@@ -375,8 +335,7 @@ function Visibility() {
       </div>
       <Reveal delay={0.25}>
         <p className="small" style={{ marginTop: 24 }}>
-          Recommendations from accounts that you do not follow have stricter rules. The same post
-          can appear for a follower but not for a stranger.
+          {copy.visibility.note}
         </p>
       </Reveal>
     </Section>
@@ -384,41 +343,16 @@ function Visibility() {
 }
 
 function Takeaways() {
-  const items: [string, string][] = [
-    [
-      'Your attention is a vote',
-      'Even time spent on a post (“dwell”) counts. You get more of what you spend time on.',
-    ],
-    [
-      'Replies and shares speak loudest',
-      'A reply is worth approximately 10 likes to the ranker. A share via DM or a copied link is worth even more.',
-    ],
-    [
-      'Negative feedback is powerful',
-      '“Not interested”, mute, and block carry large negative weights. One report outweighs hundreds of likes. Use them. They work.',
-    ],
-    [
-      'Your feed resets constantly',
-      'Ranking uses your recent actions. A few days of different behavior changes what you see.',
-    ],
-    [
-      'Following still matters',
-      'Posts from mutual follows get a boost, and out-of-network posts get a discount. The accounts that you follow shape the whole feed.',
-    ],
-    [
-      'Variety is enforced',
-      'Repeated posts from one author decay in score, and the system spreads similar posts apart on purpose.',
-    ],
-  ]
+  const copy = useCopy()
   return (
-    <Section id="takeaways" theme="light" eyebrow="What to do with all this">
+    <Section id="takeaways" theme="light" eyebrow={copy.takeaways.eyebrow}>
       <Reveal>
         <h2 className="display">
-          You have more control <span className="dim">than you think.</span>
+          {copy.takeaways.title} <span className="dim">{copy.takeaways.titleDim}</span>
         </h2>
       </Reveal>
       <div style={{ marginTop: 56 }} className="cellgrid cols-2">
-        {items.map(([title, body], i) => (
+        {copy.takeaways.items.map(({ title, body }, i) => (
           <motion.div
             key={title}
             className="cell"
@@ -436,18 +370,19 @@ function Takeaways() {
   )
 }
 
-const SLIDES: [string, ComponentType][] = [
-  ['The pipeline', Fresh],
-  ['Two worlds', Sources],
-  ['Your habits', Signals],
-  ['Predictions', Predictions],
-  ['The price tags', Weights],
-  ['Adjustments', Adjustments],
-  ['The gate', Visibility],
-  ['Takeaways', Takeaways],
+const SLIDES: [keyof Copy['deepDive']['slides'], ComponentType][] = [
+  ['pipeline', Fresh],
+  ['worlds', Sources],
+  ['habits', Signals],
+  ['predictions', Predictions],
+  ['prices', Weights],
+  ['adjustments', Adjustments],
+  ['gate', Visibility],
+  ['takeaways', Takeaways],
 ]
 
 function DeepDive() {
+  const copy = useCopy()
   const [index, setIndex] = useState(0)
   const [dir, setDir] = useState(1)
   const count = SLIDES.length
@@ -460,19 +395,22 @@ function DeepDive() {
   }
 
   const ActiveSlide = SLIDES[index][1]
-  const nextLabel = index === count - 1 ? 'Back to the start' : SLIDES[index + 1][0]
+  const nextLabel =
+    index === count - 1
+      ? copy.deepDive.restart
+      : copy.deepDive.slides[SLIDES[index + 1][0]]
 
   return (
     <div id="deepdive">
       <div className="slide-bar">
         <div className="slide-bar-inner">
-          {SLIDES.map(([label], n) => (
+          {SLIDES.map(([slide], n) => (
             <button
-              key={label}
+              key={slide}
               className={`slide-tab ${n === index ? 'active' : ''}`}
               onClick={() => go(n)}
             >
-              {label}
+              {copy.deepDive.slides[slide]}
             </button>
           ))}
         </div>
@@ -494,7 +432,7 @@ function DeepDive() {
             className="mono"
             style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.5 }}
           >
-            Next up
+            {copy.deepDive.nextUp}
           </span>
           <span className="display" style={{ fontSize: 'clamp(22px, 3vw, 32px)' }}>
             {nextLabel} {index === count - 1 ? '↺' : '→'}
