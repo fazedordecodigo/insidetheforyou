@@ -89,7 +89,8 @@ Those URLs are absolute and cannot be derived from the request, so the deployed 
 `SITE_URL` in `shared/locales.ts`. The card is `public/og-card.png` (1200×630), generated from
 `scripts/og-card.html`; `npm run og:card` takes the screenshot (headless Chrome, `CHROME_PATH` if the
 binary is somewhere unusual), so editing the card's markup and re-running it keeps the committed PNG
-in step with its source.
+in step with its source. The card's two fonts are vendored in `scripts/fonts/`, which makes the render
+offline and byte-for-byte reproducible instead of dependent on Google Fonts answering in time.
 
 `/pt-br` is a file rather than `pt-br/index.html` because `wrangler.jsonc` sets
 `html_handling: auto-trailing-slash`, which would redirect `/pt-br` to `/pt-br/` if it were a folder.

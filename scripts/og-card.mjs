@@ -4,16 +4,21 @@
 //
 //   npm run og:card
 //
+// The render is offline and deterministic: the card's fonts are vendored in
+// scripts/fonts/, so the same markup always produces the same bytes.
+//
 // Chrome is not a dependency of this project; set CHROME_PATH if the binary is not
 // in one of the usual places.
 import { execFileSync } from 'node:child_process'
 import { accessSync, copyFileSync, mkdtempSync, rmSync, constants } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const SIZE = '1200,630'
-const SOURCE = resolve('scripts/og-card.html')
-const TARGET = resolve('public/og-card.png')
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const SOURCE = join(ROOT, 'scripts/og-card.html')
+const TARGET = join(ROOT, 'public/og-card.png')
 
 const CANDIDATES = [
   process.env.CHROME_PATH,
@@ -51,10 +56,10 @@ try {
       '--hide-scrollbars',
       `--window-size=${SIZE}`,
       `--screenshot=${shot}`,
-      // The card loads Google Fonts, so give the network time to answer before the
-      // frame is captured; without it the screenshot can land on fallback fonts.
+      // The fonts are local, but `font-display: block` still needs a frame or two to
+      // swap them in; without this the capture can land on the fallback face.
       '--virtual-time-budget=5000',
-      `file://${SOURCE}`,
+      pathToFileURL(SOURCE).href,
     ],
     { stdio: 'inherit' }
   )
