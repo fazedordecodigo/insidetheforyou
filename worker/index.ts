@@ -2,6 +2,14 @@
 // The XAI_API_KEY secret is set in the Worker settings (Variables and Secrets)
 // or with: npx wrangler secret put XAI_API_KEY
 
+import {
+  describeWeights,
+  isLocale,
+  nameFromResponse,
+  nameRequestBody,
+  type Locale,
+} from '../shared/name-prompt.ts'
+
 type RateLimiter = { limit: (options: { key: string }) => Promise<{ success: boolean }> }
 
 type Env = {
@@ -9,38 +17,6 @@ type Env = {
   ASSETS: { fetch: (request: Request) => Promise<Response> }
   NAME_RATE_LIMITER?: RateLimiter
   NAME_GLOBAL_LIMITER?: RateLimiter
-}
-
-const DEFAULTS: Record<string, number> = {
-  like: 0.5,
-  reply: 5,
-  repost: 1,
-  quote: 5,
-  share: 2,
-  copyLink: 20,
-  follow: 4,
-  click: 0.4,
-  video: 0.05,
-  notInterested: -43.2,
-  block: -31.2,
-  mute: -58.8,
-  report: -234,
-}
-
-const LABELS: Record<string, string> = {
-  like: 'like',
-  reply: 'reply',
-  repost: 'repost',
-  quote: 'quote',
-  share: 'share',
-  copyLink: 'copy link',
-  follow: 'follow author',
-  click: 'open post',
-  video: 'watch video',
-  notInterested: 'not interested',
-  block: 'block',
-  mute: 'mute',
-  report: 'report',
 }
 
 async function handleName(request: Request, env: Env): Promise<Response> {
@@ -59,26 +35,27 @@ async function handleName(request: Request, env: Env): Promise<Response> {
   }
 
   let weights: Record<string, unknown>
+  let locale: Locale = 'en'
   try {
-    const body = (await request.json()) as { weights?: Record<string, unknown> }
+    const body = (await request.json()) as {
+      weights?: Record<string, unknown>
+      locale?: unknown
+    }
     weights = body.weights ?? {}
+    if (body.locale !== undefined) {
+      if (!isLocale(body.locale)) {
+        return Response.json({ error: 'invalid locale' }, { status: 400 })
+      }
+      locale = body.locale
+    }
   } catch {
     return Response.json({ error: 'invalid JSON body' }, { status: 400 })
   }
 
-  // Only accept the known knobs, as numbers, within sane bounds.
-  const clean: Record<string, number> = {}
-  for (const id of Object.keys(DEFAULTS)) {
-    const v = weights[id]
-    if (typeof v !== 'number' || !Number.isFinite(v) || v < -600 || v > 60) {
-      return Response.json({ error: `invalid weight: ${id}` }, { status: 400 })
-    }
-    clean[id] = v
+  const described = describeWeights(weights, locale)
+  if ('invalid' in described) {
+    return Response.json({ error: `invalid weight: ${described.invalid}` }, { status: 400 })
   }
-
-  const description = Object.keys(DEFAULTS)
-    .map((id) => `${LABELS[id]} ${clean[id]} (default ${DEFAULTS[id]})`)
-    .join(', ')
 
   const res = await fetch('https://api.x.ai/v1/chat/completions', {
     method: 'POST',
@@ -86,30 +63,14 @@ async function handleName(request: Request, env: Env): Promise<Response> {
       Authorization: `Bearer ${env.XAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model: 'grok-4.20-0309-non-reasoning',
-      temperature: 1.0,
-      max_tokens: 20,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You name custom social feed ranking algorithms based on their engagement weights. Respond with ONLY a short, funny, memorable name of 2 to 4 words. No quotes, no punctuation at the end, no explanation.',
-        },
-        {
-          role: 'user',
-          content: `The user tuned these engagement weights for their feed ranking algorithm (defaults in parens): ${description}. Name the algorithm based on the personality a feed ranked with these weights has.`,
-        },
-      ],
-    }),
+    body: nameRequestBody(described.description, locale),
   })
 
   if (!res.ok) {
     return Response.json({ error: `upstream error ${res.status}` }, { status: 502 })
   }
 
-  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] }
-  const name = data.choices?.[0]?.message?.content?.trim().replace(/^["']|["']$/g, '')
+  const name = nameFromResponse(await res.json())
   if (!name) {
     return Response.json({ error: 'no name in response' }, { status: 502 })
   }
@@ -120,8 +81,16 @@ async function handleName(request: Request, env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
-    if (url.pathname === '/api/name' && request.method === 'POST') {
+    if (url.pathname === '/api/name') {
+      if (request.method !== 'POST') {
+        return Response.json({ error: 'method not allowed' }, { status: 405, headers: { Allow: 'POST' } })
+      }
       return handleName(request, env)
+    }
+    // Everything else under /api/ answers as an endpoint, not as the SPA the
+    // asset fallback would serve with a 200.
+    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
+      return Response.json({ error: 'not found' }, { status: 404 })
     }
     return env.ASSETS.fetch(request)
   },
