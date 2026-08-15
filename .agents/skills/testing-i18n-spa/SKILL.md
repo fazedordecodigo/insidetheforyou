@@ -5,6 +5,16 @@ description: End-to-end testing recipes for this Vite/React SPA (insidetheforyou
 
 # Testing insidetheforyou (i18n SPA)
 
+## Prerequisite: the i18n layer must be in the working tree
+Everything below describes the bilingual site (`src/i18n/`, `LocaleProvider`, the `EN | PT` toggle,
+`/pt-br`, the `hreflang` tags, the locale in the `/api/name` body). That layer arrives with the i18n
+stack, whose PRs are still open, so on `main` it does not exist yet — `src/` has only `App.tsx`,
+`main.tsx`, `components/`, `sections/`, `data/` and `assets/`; the build emits a single `index.html`
+with no `canonical`/`hreflang`; `WeightLab` posts `{ weights }` with no locale and keys its name cache
+on the weights alone; and the default name / button label are only `Just Regular X` / `Ask Grok`.
+**Check that `src/i18n/locale.ts` exists before starting**; if it does not, test the branch carrying
+the i18n slice instead of reporting the missing screens as failures.
+
 ## Servers
 - Dev: `npm install && npm run dev` → http://localhost:5173. The `/api/name` emulator only exists here (`vite.config.ts` `configureServer`, dev only) and answers **500 without `XAI_API_KEY`**.
 - Production check: `npm run build && npm run preview` → http://localhost:4173. A `200` on `/pt-br` there proves nothing about routing: Vite's static server does not complete extensions, so the request lands on the SPA fallback (`index.html`, English head). To exercise the real mapping use `npx wrangler dev --port 8788`, which serves `dist` the way production does: `/pt-br` → 200 with `lang="pt-BR"` from `dist/pt-br.html`, `/pt-br.html` and `/pt-br/` → 307 to `/pt-br`, and any unknown path → 200 with the English `index.html`.
