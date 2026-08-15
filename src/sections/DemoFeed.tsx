@@ -2,10 +2,28 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal, Section } from '../components/Reveal'
 import realTweets from '../data/tweets.json'
-import { useCopy, useFormat, type Copy } from '../i18n'
+import { entriesOf, useCopy, useFormat, type Copy } from '../i18n'
+
+type PostId = keyof Copy['demoFeed']['posts']
+
+// Every note key of every post, so the table below has to name all of them.
+type NoteId = { [Id in PostId]: keyof Copy['demoFeed']['posts'][Id]['notes'] }[PostId]
+
+const NOTE_KINDS: Record<NoteId, 'good' | 'bad' | 'info'> = {
+  saraReply: 'good',
+  saraAffinity: 'good',
+  saraOrigin: 'info',
+  priyaCopyLink: 'good',
+  priyaDiscount: 'bad',
+  priyaOrigin: 'info',
+  octoAffinity: 'good',
+  octoWatch: 'info',
+  sara2Decay: 'bad',
+  sara2Outscored: 'info',
+}
 
 type FeedPost = {
-  id: keyof Copy['demoFeed']['posts']
+  id: PostId
   name: string
   handle: string
   time: string
@@ -13,7 +31,6 @@ type FeedPost = {
   color: string
   video?: boolean
   stats: [string, string, string, string]
-  noteKinds: ('good' | 'bad' | 'info')[]
 }
 
 const FEED: FeedPost[] = [
@@ -25,7 +42,6 @@ const FEED: FeedPost[] = [
     initials: 'SC',
     color: '#6b5b95',
     stats: ['214', '186', '2.4K', '148K'],
-    noteKinds: ['good', 'good', 'info'],
   },
   {
     id: 'priya',
@@ -35,7 +51,6 @@ const FEED: FeedPost[] = [
     initials: 'PR',
     color: '#2a9d8f',
     stats: ['96', '412', '3.1K', '512K'],
-    noteKinds: ['good', 'bad', 'info'],
   },
   {
     id: 'octo',
@@ -46,7 +61,6 @@ const FEED: FeedPost[] = [
     color: '#1d6fa3',
     video: true,
     stats: ['1.1K', '8.7K', '54K', '2.1M'],
-    noteKinds: ['good', 'info'],
   },
   {
     id: 'sara2',
@@ -56,7 +70,6 @@ const FEED: FeedPost[] = [
     initials: 'SC',
     color: '#6b5b95',
     stats: ['58', '44', '890', '61K'],
-    noteKinds: ['bad', 'info'],
   },
 ]
 
@@ -153,8 +166,8 @@ export function DemoFeed() {
               </div>
             </div>
             <div className="feed-notes">
-              {copy.demoFeed.posts[p.id].notes.map((text, n) => (
-                <div key={text} className={`feed-note ${p.noteKinds[n]}`}>
+              {entriesOf(copy.demoFeed.posts[p.id].notes).map(([id, text]) => (
+                <div key={id} className={`feed-note ${NOTE_KINDS[id]}`}>
                   <span className="feed-note-arrow">↳</span>
                   <span>{text}</span>
                 </div>
@@ -184,6 +197,9 @@ const SIM_ACTIONS: { id: SimActionId; weight: number; kind: 'good' | 'bad' }[] =
 ]
 
 type TopicId = keyof Copy['actionEffects']['topics']
+
+// Muting an author also costs every other post on the same topic.
+const MUTED_ADJACENT = -5
 
 const TOPIC_RULES: [TopicId, RegExp][] = [
   ['rust', /\brust\b|rustlang|cargo|borrow checker/i],
@@ -388,12 +404,12 @@ export function ActionEffects() {
         score:
           Math.log10(p.likes + 1) +
           (topicSum[p.topic] ?? 0) +
-          (dimTopics.has(p.topic) ? -5 : 0),
+          (dimTopics.has(p.topic) ? MUTED_ADJACENT : 0),
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 7)
 
-    const interests = (Object.entries(topicSum) as [TopicId, number][])
+    const interests = entriesOf<TopicId, number>(topicSum)
       .filter(([t, s]) => s !== 0 && !reportedTopics.has(t))
       .map(([t, s]) => {
         const label = copy.actionEffects.topics[t]
@@ -515,7 +531,7 @@ export function ActionEffects() {
                         ))}
                         {p.dimmed && (
                           <span className="sim-chip bad">
-                            −5 {copy.actionEffects.mutedAdjacent}
+                            {signed(MUTED_ADJACENT)} {copy.actionEffects.mutedAdjacent}
                           </span>
                         )}
                       </div>

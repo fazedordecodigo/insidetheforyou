@@ -2,7 +2,7 @@ import { useState, type ComponentType } from 'react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
 import { Reveal, Section } from './components/Reveal'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
-import { useCopy, useFormat, type Copy } from './i18n'
+import { entriesOf, useCopy, useFormat, type Copy } from './i18n'
 import { ScoreLab } from './sections/ScoreLab'
 import { Adjustments } from './sections/Adjustments'
 import { Weights } from './sections/Weights'
@@ -255,15 +255,20 @@ function Signals() {
   )
 }
 
-const PREDICTION_ODDS = [0.31, 0.04, 0.07, 0.42, 0.01, 0.002]
+// Keyed, so the dictionary label of each action is the one the odds belong to.
+const PREDICTION_ODDS: Record<keyof Copy['predictions']['probs'], number> = {
+  like: 0.31,
+  reply: 0.04,
+  repost: 0.07,
+  watch: 0.42,
+  follow: 0.01,
+  notInterested: 0.002,
+}
 
 function Predictions() {
   const copy = useCopy()
   const { num } = useFormat()
-  const probs: [string, number][] = copy.predictions.probs.map((label, i) => [
-    label,
-    PREDICTION_ODDS[i],
-  ])
+  const probs = entriesOf(PREDICTION_ODDS)
   return (
     <Section theme="dark">
       <Reveal>
@@ -275,9 +280,9 @@ function Predictions() {
         <p className="lede">{copy.predictions.lede}</p>
       </Reveal>
       <div style={{ marginTop: 48, maxWidth: 760 }}>
-        {probs.map(([label, p], i) => (
-          <div className="weight-row" key={label}>
-            <span className="weight-label">P({label})</span>
+        {probs.map(([id, p], i) => (
+          <div className="weight-row" key={id}>
+            <span className="weight-label">P({copy.predictions.probs[id]})</span>
             <div className="bar-track">
               <motion.div
                 initial={{ width: 0 }}

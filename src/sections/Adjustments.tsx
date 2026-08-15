@@ -2,18 +2,21 @@ import { motion } from 'framer-motion'
 import { Reveal, Section } from '../components/Reveal'
 import { useCopy } from '../i18n'
 
-function Bars({
+// The value of each bar is a constant of the code and its label comes from the
+// dictionary, so the two are paired by position: this signature is what makes the
+// compiler require one value per label.
+function Bars<T extends readonly string[]>({
   values,
   labels,
   marks,
 }: {
-  values: number[]
-  labels: string[]
-  marks?: string[]
+  values: { [K in keyof T]: number }
+  labels: T
+  marks?: T
 }) {
   return (
     <div style={{ marginTop: 20, display: 'grid', gap: 10 }}>
-      {values.map((v, i) => (
+      {values.map((v: number, i: number) => (
         <div
           key={i}
           style={{

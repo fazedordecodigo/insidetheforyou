@@ -1,3 +1,5 @@
+import { texts } from './pairing.ts'
+
 export const en = {
   meta: {
     title: 'insidetheforyou: How the X Algorithm Works',
@@ -57,7 +59,10 @@ export const en = {
     verdictCompetes: 'competes for a spot in your feed',
     verdictInvisible: 'invisible to the ranker',
     verdictBuried: 'buried, you will almost never see posts like this',
-    note: 'Notice the asymmetry: one report (−234) cancels 468 likes (+0.5 each). The penalty for one bad experience is far larger than the reward for one good experience.',
+    // Signed numbers are never written into the copy: they arrive already
+    // formatted, so the sign is the one Intl produces for the active locale.
+    note: ({ report, likes, like }: { report: string; likes: string; like: string }) =>
+      `Notice the asymmetry: one report (${report}) cancels ${likes} likes (${like} each). The penalty for one bad experience is far larger than the reward for one good experience.`,
   },
   demoFeed: {
     title: 'Why am I',
@@ -67,33 +72,33 @@ export const en = {
     posts: {
       sara: {
         body: 'Just shipped the new onboarding flow. Six months of work, live for everyone today.',
-        notes: [
-          '+12.4: you two follow each other, so a likely reply is worth 20 instead of 5',
-          '+0.9: you liked 8 of her last 10 posts',
-          'in-network: served instantly by Thunder',
-        ],
+        notes: {
+          saraReply: '+12.4: you two follow each other, so a likely reply is worth 20 instead of 5',
+          saraAffinity: '+0.9: you liked 8 of her last 10 posts',
+          saraOrigin: 'in-network: served instantly by Thunder',
+        },
       },
       priya: {
         body: 'The complete guide to pricing your SaaS product. Everything I learned from 40 launches (thread)',
-        notes: [
-          '+4.6: people with your tastes copy this link, and copy-link is worth +20',
-          '×0.75: out-of-network discount applied, it ranked high anyway',
-          'discovery: found by Phoenix, this account is new to you',
-        ],
+        notes: {
+          priyaCopyLink: '+4.6: people with your tastes copy this link, and copy-link is worth +20',
+          priyaDiscount: '×0.75: out-of-network discount applied, it ranked high anyway',
+          priyaOrigin: 'discovery: found by Phoenix, this account is new to you',
+        },
       },
       octo: {
         body: 'An octopus solving a puzzle box in 90 seconds. Watch the arms work independently.',
-        notes: [
-          '+2.1: you watched 3 animal videos to the end this week',
-          'P(watch) = 0.81: the model expects you to finish this one too',
-        ],
+        notes: {
+          octoAffinity: '+2.1: you watched 3 animal videos to the end this week',
+          octoWatch: 'P(watch) = 0.81: the model expects you to finish this one too',
+        },
       },
       sara2: {
         body: 'Follow-up: the 5 mistakes we made building it, so you don’t have to.',
-        notes: [
-          '×0.5: second post from Sara this refresh, author diversity decay',
-          'it still outscored every post below it',
-        ],
+        notes: {
+          sara2Decay: '×0.5: second post from Sara this refresh, author diversity decay',
+          sara2Outscored: 'it still outscored every post below it',
+        },
       },
     },
   },
@@ -216,14 +221,14 @@ export const en = {
     title: 'For every post, one question:',
     titleDim: '“what would you do with this?”',
     lede: 'A transformer model (the same family of AI that powers chatbots) estimates the probability of each action, good and bad, for each candidate post.',
-    probs: [
-      'you like it',
-      'you reply',
-      'you repost it',
-      'you watch the video',
-      'you follow the author',
-      'you say “not interested”',
-    ],
+    probs: {
+      like: 'you like it',
+      reply: 'you reply',
+      repost: 'you repost it',
+      watch: 'you watch the video',
+      follow: 'you follow the author',
+      notInterested: 'you say “not interested”',
+    },
     note: 'These numbers are examples for one imaginary post. The model produces a full set like this for each candidate on each refresh.',
   },
   weights: {
@@ -239,17 +244,17 @@ export const en = {
     diversityTag: 'Author diversity',
     diversityTitle: 'No one gets to dominate',
     diversityBody: 'Each extra post from the same author gets half the score, down to a floor. One prolific account cannot take over your feed.',
-    diversityLabels: ['post 1', 'post 2', 'post 3', 'post 4'],
-    diversityMarks: ['×1.0', '×0.5', '×0.25', '×0.25'],
+    diversityLabels: texts('post 1', 'post 2', 'post 3', 'post 4'),
+    diversityMarks: texts('×1.0', '×0.5', '×0.25', '×0.25'),
     discountTag: 'Out-of-network discount',
     discountTitle: 'Strangers take a haircut',
     discountBody: 'Posts from accounts that you do not follow get multiplied by 0.75. Discovery must earn its place against your own network.',
-    discountLabels: ['followed', 'stranger'],
-    discountMarks: ['×1.0', '×0.75'],
+    discountLabels: texts('followed', 'stranger'),
+    discountMarks: texts('×1.0', '×0.75'),
     boostTag: 'New-author boost',
     boostTitle: 'Small accounts get a shot',
     boostBody: 'Posts from authors with few impressions get a lift. Fresh voices do not get buried under popular accounts.',
-    boostLabels: ['before', 'boosted'],
+    boostLabels: texts('before', 'boosted'),
   },
   visibility: {
     title: 'Ranking picks the order.',

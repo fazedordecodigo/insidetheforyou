@@ -18,7 +18,12 @@
     // Serves /pt-br from dist/pt-br.html (the per-locale baseline written by the
     // locale-html plugin) with no redirect, and leaves every other path to the
     // SPA fallback above.
-    "html_handling": "auto-trailing-slash"
+    "html_handling": "auto-trailing-slash",
+    // The SPA fallback above matches any path that is not a file, so without
+    // this the asset router could answer /api/* before the Worker ever runs.
+    // `/api` on its own is not matched by `/api/*`, and would otherwise reach the
+    // SPA fallback as a 200.
+    "run_worker_first": ["/api", "/api/*"]
   },
   "ratelimits": [
     {

@@ -81,8 +81,16 @@ async function handleName(request: Request, env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
-    if (url.pathname === '/api/name' && request.method === 'POST') {
+    if (url.pathname === '/api/name') {
+      if (request.method !== 'POST') {
+        return Response.json({ error: 'method not allowed' }, { status: 405, headers: { Allow: 'POST' } })
+      }
       return handleName(request, env)
+    }
+    // Everything else under /api/ answers as an endpoint, not as the SPA the
+    // asset fallback would serve with a 200.
+    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
+      return Response.json({ error: 'not found' }, { status: 404 })
     }
     return env.ASSETS.fetch(request)
   },

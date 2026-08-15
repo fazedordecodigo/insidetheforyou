@@ -31,9 +31,15 @@ const ACTIONS: Action[] = [
 
 const MAX_ABS = 234
 
+function weightOf(id: ActionId): number {
+  const action = ACTIONS.find((a) => a.id === id)
+  if (!action) throw new Error(`no weight for ${id}`)
+  return action.weight
+}
+
 export function ScoreLab() {
   const copy = useCopy()
-  const { signed } = useFormat()
+  const { num, signed } = useFormat()
   const [on, setOn] = useState<Set<string>>(new Set(['like', 'reply']))
   const [aura, setAura] = useState<'good' | 'bad' | null>(null)
   const [auraKey, setAuraKey] = useState(0)
@@ -66,6 +72,11 @@ export function ScoreLab() {
 
   const selected = ACTIONS.filter((a) => on.has(a.id))
   const score = selected.reduce((s, a) => s + a.weight, 0)
+
+  // The asymmetry the note describes is read off the weights above, signs
+  // included, so the sentence cannot drift from the pills next to it.
+  const report = weightOf('report')
+  const like = weightOf('like')
 
   return (
     <Section id="scoring" theme="light">
@@ -149,7 +160,11 @@ export function ScoreLab() {
           />
         </div>
         <p className="small" style={{ marginTop: 20 }}>
-          {copy.scoreLab.note}
+          {copy.scoreLab.note({
+            report: signed(report),
+            like: signed(like),
+            likes: num(Math.abs(report / like)),
+          })}
         </p>
       </div>
     </Section>

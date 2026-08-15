@@ -1,4 +1,5 @@
 import type { Copy } from './en.ts'
+import { texts } from './pairing.ts'
 
 export const ptBR: Copy = {
   meta: {
@@ -58,7 +59,8 @@ export const ptBR: Copy = {
     verdictCompetes: 'disputa uma vaga no seu feed',
     verdictInvisible: 'invisível para o ranker',
     verdictBuried: 'enterrado, você quase nunca vai ver posts assim',
-    note: 'Repare na assimetria: uma denúncia (−234) cancela 468 curtidas (+0,5 cada). A punição por uma experiência ruim é muito maior que a recompensa por uma boa.',
+    note: ({ report, likes, like }) =>
+      `Repare na assimetria: uma denúncia (${report}) cancela ${likes} curtidas (${like} cada). A punição por uma experiência ruim é muito maior que a recompensa por uma boa.`,
   },
   demoFeed: {
     title: 'Por que estou',
@@ -68,33 +70,35 @@ export const ptBR: Copy = {
     posts: {
       sara: {
         body: 'Acabei de lançar o novo fluxo de onboarding. Seis meses de trabalho, no ar para todo mundo hoje.',
-        notes: [
-          '+12,4: vocês dois se seguem, então uma resposta provável vale 20 em vez de 5',
-          '+0,9: você curtiu 8 dos últimos 10 posts dela',
-          'dentro da sua rede: entregue na hora pelo Thunder',
-        ],
+        notes: {
+          saraReply: '+12,4: vocês dois se seguem, então uma resposta provável vale 20 em vez de 5',
+          saraAffinity: '+0,9: você curtiu 8 dos últimos 10 posts dela',
+          saraOrigin: 'dentro da sua rede: entregue na hora pelo Thunder',
+        },
       },
       priya: {
         body: 'O guia completo para precificar seu produto SaaS. Tudo o que aprendi em 40 lançamentos (thread)',
-        notes: [
-          '+4,6: gente com o seu gosto copia este link, e copiar o link vale +20',
-          '×0,75: desconto de fora da rede aplicado, e mesmo assim ficou bem colocado',
-          'descoberta: achado pelo Phoenix, essa conta é nova para você',
-        ],
+        notes: {
+          priyaCopyLink: '+4,6: gente com o seu gosto copia este link, e copiar o link vale +20',
+          priyaDiscount:
+            '×0,75: desconto de fora da rede aplicado, e mesmo assim ficou bem colocado',
+          priyaOrigin: 'descoberta: achado pelo Phoenix, essa conta é nova para você',
+        },
       },
       octo: {
         body: 'Um polvo resolvendo uma caixa-enigma em 90 segundos. Repare nos braços trabalhando de forma independente.',
-        notes: [
-          '+2,1: você assistiu a 3 vídeos de animais até o fim esta semana',
-          'P(assistir) = 0,81: o modelo espera que você termine este também',
-        ],
+        notes: {
+          octoAffinity: '+2,1: você assistiu a 3 vídeos de animais até o fim esta semana',
+          octoWatch: 'P(assistir) = 0,81: o modelo espera que você termine este também',
+        },
       },
       sara2: {
         body: 'Continuando: os 5 erros que cometemos ao construir isso, para você não repetir.',
-        notes: [
-          '×0,5: segundo post da Sara nesta atualização, decaimento por diversidade de autor',
-          'mesmo assim, pontuou mais que todos os posts abaixo',
-        ],
+        notes: {
+          sara2Decay:
+            '×0,5: segundo post da Sara nesta atualização, decaimento por diversidade de autor',
+          sara2Outscored: 'mesmo assim, pontuou mais que todos os posts abaixo',
+        },
       },
     },
   },
@@ -220,14 +224,14 @@ export const ptBR: Copy = {
     title: 'Para cada post, uma pergunta:',
     titleDim: '“o que você faria com isso?”',
     lede: 'Um modelo transformer (a mesma família de IA que roda nos chatbots) estima a probabilidade de cada ação, boa ou ruim, para cada post candidato.',
-    probs: [
-      'você curte',
-      'você responde',
-      'você reposta',
-      'você assiste ao vídeo',
-      'você segue o autor',
-      'você marca “não tenho interesse”',
-    ],
+    probs: {
+      like: 'você curte',
+      reply: 'você responde',
+      repost: 'você reposta',
+      watch: 'você assiste ao vídeo',
+      follow: 'você segue o autor',
+      notInterested: 'você marca “não tenho interesse”',
+    },
     note: 'Estes números são exemplos de um post imaginário. O modelo gera um conjunto assim para cada candidato em cada atualização.',
   },
   weights: {
@@ -243,17 +247,17 @@ export const ptBR: Copy = {
     diversityTag: 'Diversidade de autores',
     diversityTitle: 'Ninguém domina o feed',
     diversityBody: 'Cada post extra do mesmo autor recebe metade da pontuação, até um piso. Uma conta que posta muito não toma conta do seu feed.',
-    diversityLabels: ['post 1', 'post 2', 'post 3', 'post 4'],
-    diversityMarks: ['×1,0', '×0,5', '×0,25', '×0,25'],
+    diversityLabels: texts('post 1', 'post 2', 'post 3', 'post 4'),
+    diversityMarks: texts('×1,0', '×0,5', '×0,25', '×0,25'),
     discountTag: 'Desconto de fora da rede',
     discountTitle: 'Desconhecido perde pontos',
     discountBody: 'Posts de contas que você não segue são multiplicados por 0,75. A descoberta tem que merecer o espaço, disputando com a sua própria rede.',
-    discountLabels: ['seguido', 'desconhecido'],
-    discountMarks: ['×1,0', '×0,75'],
+    discountLabels: texts('seguido', 'desconhecido'),
+    discountMarks: texts('×1,0', '×0,75'),
     boostTag: 'Impulso a autor novo',
     boostTitle: 'Contas pequenas têm chance',
     boostBody: 'Posts de autores com poucas impressões recebem um empurrão. Vozes novas não ficam enterradas embaixo das contas populares.',
-    boostLabels: ['antes', 'com impulso'],
+    boostLabels: texts('antes', 'com impulso'),
   },
   visibility: {
     title: 'O ranqueamento define a ordem.',
