@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { headTags } from './src/i18n/head.ts'
+import { replaceHead } from './src/i18n/head.ts'
 import { DEFAULT_LOCALE, LOCALES, pathForLocale } from './shared/locales.ts'
 import {
   describeWeights,
@@ -95,12 +95,11 @@ function devNameApi(): Plugin {
 // answered with the English baseline. The Worker's SPA fallback still covers every
 // other path.
 function localeHtml(): Plugin {
-  const block = /<!--locale-head(?::[\w-]+)?-->(?:[\s\S]*?<!--\/locale-head-->)?/
   return {
     name: 'locale-html',
     transformIndexHtml: {
       order: 'pre',
-      handler: (html) => html.replace(block, () => headTags(DEFAULT_LOCALE)),
+      handler: (html) => replaceHead(html, DEFAULT_LOCALE),
     },
     // The default locale's file is already written at this point, hashed asset tags
     // included, so the other locales are that same file with their head swapped.
@@ -110,9 +109,10 @@ function localeHtml(): Plugin {
       const base = readFileSync(join(outDir, 'index.html'), 'utf8')
       for (const locale of LOCALES) {
         if (locale === DEFAULT_LOCALE) continue
-        const html = base
-          .replace(/<html lang="[^"]*"/, `<html lang="${locale}"`)
-          .replace(block, () => headTags(locale))
+        const html = replaceHead(
+          base.replace(/<html lang="[^"]*"/, `<html lang="${locale}"`),
+          locale
+        )
         // `pt-br.html`, not `pt-br/index.html`: with Cloudflare's auto-trailing-slash
         // handling the folder form makes `/pt-br` redirect to `/pt-br/`, and the
         // canonical URL must be served directly, not through a hop.
