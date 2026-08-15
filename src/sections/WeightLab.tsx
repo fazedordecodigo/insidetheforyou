@@ -138,12 +138,15 @@ export function WeightLab() {
     return () => clearInterval(interval)
   }, [cooldownUntil])
 
-  // A named configuration shows its own name again; anything else keeps the last
-  // name the user earned, so moving a knob does not erase it. Only switching
-  // language does, because that name is written in the previous language.
+  // A named configuration shows its own name again; any other custom one keeps the
+  // last name the user earned, so moving a knob does not erase it. The default
+  // configuration and the presets are nobody's creation, and a name written in the
+  // previous language does not survive a language switch.
   const alreadyNamed = configKey in names
   const displayName =
-    names[configKey] ?? (last?.locale === locale ? last.name : null) ?? copy.weightLab.defaultName
+    names[configKey] ??
+    (!isDefault && !isPreset && last?.locale === locale ? last.name : null) ??
+    copy.weightLab.defaultName
 
   const nameIt = async () => {
     if (naming || cooldownLeft > 0 || isDefault || isPreset || alreadyNamed) return
