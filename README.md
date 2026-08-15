@@ -69,8 +69,8 @@ back button walks through the languages you actually visited.
    `LOCALE_LABELS`, the language's own name in `LOCALE_NAMES`, the language prefix in `detectLocale`, and
    the dictionary in `DICTIONARIES`.
 4. Register the locale in `shared/name-prompt.ts`, so `POST /api/name` asks Grok for an algorithm name in
-   that language: add the tag to `LOCALES`, the language name Grok is told to write in to `LANGUAGES`
-   (e.g. `es: 'Spanish'`), and a table of signal labels to `LABELS`. That module builds the whole xAI
+   that language: add the language name Grok is told to write in to `LANGUAGES` (e.g. `es: 'Spanish'`),
+   and a table of signal labels to `LABELS`. That module builds the whole xAI
    request and is imported by both the production Worker (`worker/index.ts`) and the dev-server
    emulator (`vite.config.ts`), so there is a single place to edit and `npm run dev` matches production.
 

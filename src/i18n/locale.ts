@@ -32,8 +32,11 @@ export const LOCALE_NAMES: Record<Locale, string> = {
 
 const STORAGE_KEY = 'insidetheforyou.locale'
 
+// The `.html` suffix is dropped because the build writes each locale to a file
+// (`pt-br.html`): production redirects that URL to the extensionless one, but
+// `vite preview` serves it as is, and both must resolve to the same locale.
 function normalize(pathname: string): string {
-  const trimmed = pathname.replace(/\/+$/, '').toLowerCase()
+  const trimmed = pathname.replace(/\.html$/i, '').replace(/\/+$/, '').toLowerCase()
   return trimmed === '' ? '/' : trimmed
 }
 

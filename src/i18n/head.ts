@@ -8,13 +8,18 @@ import {
 } from '../../shared/locales.ts'
 import { DICTIONARIES } from './dictionaries.ts'
 
-export const OG_IMAGE = `${SITE_URL}/og-card.png`
-export const OG_IMAGE_SIZE = { width: 1200, height: 630 }
+const OG_IMAGE = `${SITE_URL}/og-card.png`
+const OG_IMAGE_SIZE = { width: 1200, height: 630 }
 
 // The generated block is delimited so the build can swap one locale's head for
-// another's without re-running Vite.
-export const HEAD_END = '<!--/locale-head-->'
-const headStart = (locale: Locale) => `<!--locale-head:${locale}-->`
+// another's without re-running Vite. Only `replaceHead` knows the delimiters, so
+// changing them here cannot silently stop matching somewhere else.
+const HEAD_MARK = 'locale-head'
+const HEAD_END = `<!--/${HEAD_MARK}-->`
+const headStart = (locale: Locale) => `<!--${HEAD_MARK}:${locale}-->`
+const HEAD_BLOCK = new RegExp(
+  `<!--${HEAD_MARK}(?::[\\w-]+)?-->(?:[\\s\\S]*?<!--/${HEAD_MARK}-->)?`
+)
 
 function escape(value: string): string {
   return value
@@ -27,7 +32,7 @@ function escape(value: string): string {
 // Everything a crawler that does not run JS needs to index and unfurl the page it
 // was served. `metadata.ts` rewrites the same tags on every locale switch, so the
 // two must describe the same set.
-export function headTags(locale: Locale): string {
+function headTags(locale: Locale): string {
   const { meta } = DICTIONARIES[locale]
   const url = absoluteUrlForLocale(locale)
   const tags: string[] = [
@@ -59,4 +64,14 @@ export function headTags(locale: Locale): string {
     `<link rel="alternate" hreflang="x-default" href="${absoluteUrlForLocale(DEFAULT_LOCALE)}" data-locale-alternate />`
   )
   return [headStart(locale), ...tags, HEAD_END].join('\n    ')
+}
+
+// A missing marker would produce a page with no title, description or canonical —
+// the very thing the generated block exists for — and `String.replace` would do it
+// silently, so the absence is an error instead.
+export function replaceHead(html: string, locale: Locale): string {
+  if (!HEAD_BLOCK.test(html)) {
+    throw new Error(`no <!--${HEAD_MARK}--> marker to fill with the ${locale} head`)
+  }
+  return html.replace(HEAD_BLOCK, () => headTags(locale))
 }
