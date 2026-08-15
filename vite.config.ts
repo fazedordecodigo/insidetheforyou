@@ -20,7 +20,20 @@ function devNameApi(): Plugin {
   return {
     name: 'dev-name-api',
     configureServer(server) {
-      server.middlewares.use('/api/name', async (req, res) => {
+      // Mounted on every path and matched exactly, like the Worker: a prefix mount
+      // would also answer /api/name/extra and /API/name, which in production are
+      // a 404 and the SPA fallback.
+      server.middlewares.use(async (req, res, next) => {
+        const pathname = new URL(req.url ?? '/', 'http://localhost').pathname
+        if (pathname !== '/api/name') {
+          if (pathname === '/api' || pathname.startsWith('/api/')) {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'not found' }))
+            return
+          }
+          return next()
+        }
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.setHeader('Allow', 'POST')
@@ -86,15 +99,6 @@ function devNameApi(): Plugin {
         } catch (err) {
           return json({ error: String(err) }, 500)
         }
-      })
-
-      // Registered after the handler above, so it only catches the rest of the
-      // prefix: as in the Worker, /api/* answers as an endpoint instead of
-      // falling through to the SPA.
-      server.middlewares.use('/api', (_req, res) => {
-        res.statusCode = 404
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify({ error: 'not found' }))
       })
     },
   }
