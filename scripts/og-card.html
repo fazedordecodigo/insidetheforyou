@@ -2,11 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
     <style>
+      /* The latin subsets Google Fonts serves for the two families index.html loads,
+         vendored so the screenshot never falls back to a system font when the
+         network is slow or absent. Only the weights this card renders are here. */
+      @font-face {
+        font-family: 'Archivo';
+        font-style: normal;
+        font-weight: 700;
+        font-display: block;
+        src: url('fonts/archivo-700-latin.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'IBM Plex Mono';
+        font-style: normal;
+        font-weight: 400;
+        font-display: block;
+        src: url('fonts/ibm-plex-mono-400-latin.woff2') format('woff2');
+      }
       * {
         margin: 0;
         padding: 0;

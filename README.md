@@ -87,11 +87,16 @@ before the app boots. `src/i18n/metadata.ts` then rewrites the same tags on ever
 
 Those URLs are absolute and cannot be derived from the request, so the deployed origin is a constant:
 `SITE_URL` in `shared/locales.ts`. The card is `public/og-card.png` (1200×630), generated from
-`scripts/og-card.html` with a headless Chrome screenshot at that viewport.
+`scripts/og-card.html`; `npm run og:card` takes the screenshot (headless Chrome, `CHROME_PATH` if the
+binary is somewhere unusual), so editing the card's markup and re-running it keeps the committed PNG
+in step with its source. The card's two fonts are vendored in `scripts/fonts/`, which makes the render
+offline and byte-for-byte reproducible instead of dependent on Google Fonts answering in time.
 
 `/pt-br` is a file rather than `pt-br/index.html` because `wrangler.jsonc` sets
-`html_handling: auto-trailing-slash`, which would redirect `/pt-br` to `/pt-br/` if it were a folder;
-any path with no file still falls through to `not_found_handling: single-page-application`.
+`html_handling: auto-trailing-slash`, which would redirect `/pt-br` to `/pt-br/` if it were a folder.
+Under `wrangler dev`, `/pt-br` answers 200 with `lang="pt-BR"` while `/pt-br.html` and `/pt-br/` answer
+307 to `/pt-br`; any path with no file at all still falls through to
+`not_found_handling: single-page-application`, which serves the English `index.html`.
 
 ### What stays untranslated on purpose
 
@@ -111,6 +116,7 @@ any path with no file still falls through to `not_found_handling: single-page-ap
 | `src/i18n/en.ts` | The English dictionary, and the `Copy` type every language follows |
 | `src/i18n/pt-BR.ts` | The Brazilian Portuguese dictionary |
 | `shared/locales.ts` | Locale list, paths and SEO origin, free of DOM code so the build can import it |
+| `shared/name-prompt.ts` | The whole `/api/name` request, shared by the Worker and the dev emulator |
 | `src/i18n/locale.ts` | Labels, storage, and browser detection, on top of `shared/locales.ts` |
 | `src/i18n/dictionaries.ts` | The `DICTIONARIES` map, imported by the app and by the build |
 | `src/i18n/head.ts` | The static per-language `<head>` the build writes into each HTML file |
