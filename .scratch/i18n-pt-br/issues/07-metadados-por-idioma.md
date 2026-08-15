@@ -28,15 +28,34 @@ Duas decisões que valem registro:
 - **Os textos moram no dicionário**, em `copy.meta` (`title`, `description`, `siteName`). Assim um
   terceiro idioma continua sendo "um arquivo novo", sem tocar em `metadata.ts`, e o compilador cobra
   as chaves.
-- **As URLs absolutas vêm de `window.location.origin`**, não de um domínio fixo no código. O repositório
-  não declara o domínio de produção em lugar nenhum (nem no `wrangler.jsonc`, nem no README), e chutar
-  um domínio produziria `canonical` e `hreflang` apontando para fora. O preço é que essas tags só
-  existem depois do JS rodar.
+- **As URLs absolutas vinham de `window.location.origin`**, porque o repositório não declarava o
+  domínio de produção em lugar nenhum (nem no `wrangler.jsonc`, nem no README) e chutar um domínio
+  produziria `canonical` e `hreflang` apontando para fora.
 
-O `index.html` mantém título e description em inglês e ganha as tags Open Graph estáticas
-(`og:type`, `og:site_name`, `og:locale`, `og:title`, `og:description`, `twitter:card`) como linha de
-base para quem não executa JS. `hreflang` e `canonical` ficam fora do HTML estático por dependerem
-do origin.
+A primeira entrega deixava o HTML estático em inglês (`index.html` com título, description e algumas
+tags Open Graph fixas), e `hreflang`/`canonical` só existiam depois do JS rodar — o limite herdado do
+mapa, de que um crawler sem JS veria sempre a versão inglesa em `/pt-br`.
 
-Limite conhecido, herdado do mapa: sendo SPA, um crawler que não executa JS vê sempre a versão em
-inglês em `/pt-br`. Resolver isso exige pré-render por idioma, explicitamente fora de escopo.
+## Emenda: baseline estático por idioma
+
+O autor informou o domínio (`https://insidetheforyou.com`), e com ele o limite caiu sem pré-render nem
+SSR. O domínio virou a constante `SITE_URL` em `shared/locales.ts` — derivá-lo do request faria o
+`canonical` de um preview build apontar para o preview.
+
+`index.html` não tem mais metadados escritos à mão, só o marcador `<!--locale-head-->`, e o plugin
+`locale-html` (`vite.config.ts`) chama `replaceHead()` de `src/i18n/head.ts` para gerar o `<head>` de
+cada idioma a partir dos dicionários, escrevendo um arquivo por idioma extra (`dist/pt-br.html`). O
+head estático leva o conjunto completo: título, description, `canonical`, `og:url`, `og:image` (card
+1200×630 em `public/og-card.png`, regerável com `npm run og:card`) e os três `hreflang` — estes com
+`data-locale-alternate`, o mesmo marcador que `applyMetadata()` usa para limpar, para a troca no
+cliente substituir o bloco em vez de duplicá-lo. Sem o marcador o build falha, em vez de emitir
+páginas sem metadados.
+
+O arquivo é `pt-br.html` e não `pt-br/index.html` porque o `html_handling: auto-trailing-slash` do
+`wrangler.jsonc` redirecionaria `/pt-br` → `/pt-br/` na forma de pasta. Verificado com `wrangler dev`:
+`/pt-br` responde 200 com `lang="pt-BR"`, enquanto `/pt-br.html` e `/pt-br/` respondem 307 para
+`/pt-br`.
+
+Fica de pé um limite menor: qualquer caminho sem arquivo (`/qualquer-coisa`) cai no
+`not_found_handling: single-page-application` e é respondido com o `index.html` em inglês, logo com
+`canonical` da raiz.

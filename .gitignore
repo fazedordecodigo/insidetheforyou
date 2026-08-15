@@ -27,3 +27,6 @@ x-algorithm
 SimpleEnglish
 # env
 .env
+
+# wrangler dev local state
+.wrangler
