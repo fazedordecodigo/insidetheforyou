@@ -2,7 +2,7 @@ import { useState, type ComponentType } from 'react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
 import { Reveal, Section } from './components/Reveal'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
-import { useCopy, useFormat, useLocale, type Copy } from './i18n'
+import { useCopy, useFormat, type Copy } from './i18n'
 import { ScoreLab } from './sections/ScoreLab'
 import { Adjustments } from './sections/Adjustments'
 import { Weights } from './sections/Weights'
@@ -125,7 +125,8 @@ function Fresh() {
 }
 
 function Sources() {
-  const { locale, copy } = useLocale()
+  const copy = useCopy()
+  const { num } = useFormat()
   return (
     <Section id="sources" theme="dark">
       <Reveal>
@@ -155,7 +156,7 @@ function Sources() {
                 style={{ height: '100%', background: '#fff' }}
               />
             </div>
-            <span className="weight-value">{n.toLocaleString(locale)}</span>
+            <span className="weight-value">{num(n)}</span>
           </div>
         ))}
         <p className="small" style={{ marginTop: 16 }}>
