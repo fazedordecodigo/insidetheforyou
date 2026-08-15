@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      /* The latin subsets Google Fonts serves for the two families index.html loads,
+         vendored so the screenshot never falls back to a system font when the
+         network is slow or absent. Only the weights this card renders are here. */
+      @font-face {
+        font-family: 'Archivo';
+        font-style: normal;
+        font-weight: 700;
+        font-display: block;
+        src: url('fonts/archivo-700-latin.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'IBM Plex Mono';
+        font-style: normal;
+        font-weight: 400;
+        font-display: block;
+        src: url('fonts/ibm-plex-mono-400-latin.woff2') format('woff2');
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 1200px;
+        height: 630px;
+        background: #050505;
+        color: #f4f4f2;
+        font-family: 'Archivo', sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 72px 80px;
+        overflow: hidden;
+      }
+      .kicker {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 26px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.62);
+      }
+      h1 {
+        font-size: 74px;
+        line-height: 1.06;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        max-width: 17ch;
+      }
+      h1 em {
+        font-style: normal;
+        color: #050505;
+        background: #f4f4f2;
+        padding: 0 14px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 24px;
+        color: rgba(255, 255, 255, 0.62);
+      }
+      .chip {
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        padding: 10px 22px;
+        color: #f4f4f2;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="kicker">insidetheforyou.com</div>
+    <h1>How the X <em>For&nbsp;You</em> algorithm ranks you</h1>
+    <div class="row">
+      <span class="chip">Interactive</span>
+      <span class="chip">EN</span>
+      <span class="chip">PT-BR</span>
+      <span>+0.5 like &nbsp;·&nbsp; −234 report</span>
+    </div>
+  </body>
+</html>

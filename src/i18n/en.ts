@@ -1,4 +1,10 @@
 export const en = {
+  meta: {
+    title: 'insidetheforyou: How the X Algorithm Works',
+    description:
+      "A scrollable, interactive explainer of how X's For You feed decides what you see.",
+    siteName: 'insidetheforyou',
+  },
   nav: {
     brand: 'insidetheforyou',
     scoring: 'Scoring',
