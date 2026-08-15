@@ -1261,7 +1261,9 @@ a {
     white-space: nowrap;
   }
 
-  .nav-link:first-of-type {
+  /* The first link is not the first <a> in the bar — the brand is — so it has
+     to be named by what precedes it. */
+  .nav-spacer + .nav-link {
     border-left: none;
   }
 

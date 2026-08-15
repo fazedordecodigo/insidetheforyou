@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import type { Copy } from './en'
 import { applyMetadata } from './metadata'
 import {
@@ -63,9 +71,13 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     setLocaleState(next)
   }, [])
 
-  return (
-    <LocaleContext value={{ locale, copy: DICTIONARIES[locale], setLocale }}>{children}</LocaleContext>
+  // Consumers re-render on a language change and on nothing else.
+  const value = useMemo(
+    () => ({ locale, copy: DICTIONARIES[locale], setLocale }),
+    [locale, setLocale],
   )
+
+  return <LocaleContext value={value}>{children}</LocaleContext>
 }
 
 export function useLocale(): LocaleContextValue {
