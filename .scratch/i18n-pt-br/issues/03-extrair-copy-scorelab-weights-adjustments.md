@@ -18,5 +18,5 @@ As três seções leem tudo do dicionário.
 
 - Os nomes de ação viraram chaves compartilhadas em `copy.actions` (`like`, `reply`, `replyMutual`, `repost`, `quote`, `share`, `shareDm`, `copyLink`, `follow`, `click`, `video`, `notInterested`, `block`, `mute`, `report`), consumidas por `ScoreLab`, `Weights` e `WeightLab` — um único lugar para a decisão do ticket 05.
 - `ACTIONS`/`WEIGHTS` guardam só `id` + peso, tipados como `keyof Copy['actions']`, então um id errado é erro de compilação.
-- Valores numéricos passam por `useFormat()` (`src/i18n/format.ts`): em pt-BR o peso aparece como `+0,5` e a pontuação como `−58,8`.
+- Valores numéricos passam por `useFormat()` (`src/i18n/format.ts`): em pt-BR o peso aparece como `+0,5` e a pontuação como `-58,8` (o sinal é o do `Intl`, não o menos tipográfico).
 - Em `Adjustments`, os rótulos e as marcas das barras (`×1,0`, `×0,75`) estão no dicionário, porque o separador decimal muda com o idioma.
