@@ -1377,3 +1377,31 @@ a {
     padding: 48px 20px;
   }
 }
+
+/* ============ Very narrow screens (320px and up) ============ */
+@media (max-width: 420px) {
+  /* The four links take a full row of their own, so the language switch and the
+     Devin link wrap to the next one instead of overflowing the viewport. */
+  .nav-link {
+    flex: 1 1 22%;
+    min-width: 0;
+    padding: 11px 2px;
+    font-size: 9px;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+  }
+
+  .lang-switch {
+    flex: 1;
+    border-left: none;
+    border-top: 1px solid var(--line-light);
+  }
+
+  .lang-option {
+    flex: 1;
+  }
+
+  .nav-devin {
+    border-top: 1px solid var(--line-light);
+  }
+}

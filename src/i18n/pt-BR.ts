@@ -263,23 +263,23 @@ export const ptBR: Copy = {
     title: 'O ranqueamento define a ordem.',
     titleDim: 'Um portão separado define a visibilidade.',
     lede: 'Depois do ranqueamento, cada post passa por uma checagem de visibilidade. Ela usa seus bloqueios, seus silenciamentos e rótulos de segurança de outros sistemas. E dá uma de três respostas:',
-    rows: [
-      {
+    rows: {
+      allow: {
         verdict: 'Liberar',
         what: 'O post aparece normalmente.',
         why: 'É o padrão para quase todos os posts.',
       },
-      {
+      interstitial: {
         verdict: 'Aviso',
         what: 'O post fica atrás de um aviso que você pode tocar para ver.',
         why: 'O X usa isso em mídia gráfica ou adulta.',
       },
-      {
+      drop: {
         verdict: 'Descartar',
         what: 'O post nunca aparece para você.',
         why: 'Vale para autores bloqueados, violações de política e spam.',
       },
-    ],
+    },
     note: 'Recomendações de contas que você não segue seguem regras mais estritas. O mesmo post pode aparecer para um seguidor e não aparecer para um desconhecido.',
   },
   takeaways: {

@@ -318,10 +318,11 @@ function Visibility() {
         <p className="lede">{copy.visibility.lede}</p>
       </Reveal>
       <div style={{ marginTop: 48 }} className="cellgrid cols-3">
-        {copy.visibility.rows.map(({ verdict, what, why }, i) => (
+        {entriesOf(copy.visibility.rows).map(([id, { verdict, what, why }], i) => (
           <motion.div
-            key={verdict}
-            className={`cell ${i === copy.visibility.rows.length - 1 ? 'filled' : ''}`}
+            key={id}
+            // The filled card is the drop verdict, not whichever row comes last.
+            className={`cell ${id === 'drop' ? 'filled' : ''}`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}

@@ -260,23 +260,23 @@ export const en = {
     title: 'Ranking picks the order.',
     titleDim: 'A separate gate decides visibility.',
     lede: 'After ranking, each post goes through a visibility check. The check uses your blocks, your mutes, and safety labels from other systems. It gives one of three answers:',
-    rows: [
-      {
+    rows: {
+      allow: {
         verdict: 'Allow',
         what: 'The post appears normally.',
         why: 'This is the default for almost all posts.',
       },
-      {
+      interstitial: {
         verdict: 'Interstitial',
         what: 'The post hides behind a warning that you can tap through.',
         why: 'X uses this for graphic or adult media.',
       },
-      {
+      drop: {
         verdict: 'Drop',
         what: 'The post never appears for you.',
         why: 'This applies to blocked authors, policy violations, and spam.',
       },
-    ],
+    },
     note: 'Recommendations from accounts that you do not follow have stricter rules. The same post can appear for a follower but not for a stranger.',
   },
   takeaways: {
