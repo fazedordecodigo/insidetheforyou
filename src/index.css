@@ -122,6 +122,41 @@ body {
   align-items: center;
 }
 
+.lang-switch {
+  display: flex;
+  align-items: stretch;
+  border-left: 1px solid var(--line-light);
+}
+
+.lang-option {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  padding: 14px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.lang-option + .lang-option {
+  border-left: 1px solid var(--line-light);
+}
+
+.lang-option:hover {
+  opacity: 0.75;
+}
+
+.lang-option.active {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .nav-devin {
   display: flex;
   align-items: center;
@@ -1226,8 +1261,16 @@ a {
     white-space: nowrap;
   }
 
-  .nav-link:first-of-type {
+  /* The first link is not the first <a> in the bar — the brand is — so it has
+     to be named by what precedes it. */
+  .nav-spacer + .nav-link {
     border-left: none;
+  }
+
+  .lang-option {
+    padding: 11px 8px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
   }
 
   .nav-devin {
@@ -1332,5 +1375,33 @@ a {
 
   .footer-inner {
     padding: 48px 20px;
+  }
+}
+
+/* ============ Very narrow screens (320px and up) ============ */
+@media (max-width: 420px) {
+  /* The four links take a full row of their own, so the language switch and the
+     Devin link wrap to the next one instead of overflowing the viewport. */
+  .nav-link {
+    flex: 1 1 22%;
+    min-width: 0;
+    padding: 11px 2px;
+    font-size: 9px;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+  }
+
+  .lang-switch {
+    flex: 1;
+    border-left: none;
+    border-top: 1px solid var(--line-light);
+  }
+
+  .lang-option {
+    flex: 1;
+  }
+
+  .nav-devin {
+    border-top: 1px solid var(--line-light);
   }
 }

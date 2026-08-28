@@ -1,16 +1,42 @@
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { replaceHead } from './src/i18n/head.ts'
+import { DEFAULT_LOCALE, LOCALES, pathForLocale } from './shared/locales.ts'
+import {
+  describeWeights,
+  isLocale,
+  nameFromResponse,
+  nameRequestBody,
+  type Locale,
+} from './shared/name-prompt.ts'
 
-// In production, the Cloudflare Worker (worker/index.ts) serves /api/name.
-// This plugin emulates that endpoint during `npm run dev` with the local .env key.
+// In production the Cloudflare Worker (worker/index.ts) serves /api/name; this plugin
+// emulates it during `npm run dev` with the local .env key. Both build the request from
+// shared/name-prompt.ts, so the dev prompt cannot drift from the production one.
+
 function devNameApi(): Plugin {
   return {
     name: 'dev-name-api',
     configureServer(server) {
-      server.middlewares.use('/api/name', async (req, res) => {
+      // Mounted on every path and matched exactly, like the Worker: a prefix mount
+      // would also answer /api/name/extra and /API/name, which in production are
+      // a 404 and the SPA fallback.
+      server.middlewares.use(async (req, res, next) => {
+        const pathname = new URL(req.url ?? '/', 'http://localhost').pathname
+        if (pathname !== '/api/name') {
+          if (pathname === '/api' || pathname.startsWith('/api/')) {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'not found' }))
+            return
+          }
+          return next()
+        }
         if (req.method !== 'POST') {
           res.statusCode = 405
+          res.setHeader('Allow', 'POST')
           res.end()
           return
         }
@@ -32,48 +58,87 @@ function devNameApi(): Plugin {
         const chunks: Buffer[] = []
         for await (const chunk of req) chunks.push(chunk as Buffer)
 
+        const json = (payload: unknown, status: number) => {
+          res.statusCode = status
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(payload))
+        }
+
+        let weights: unknown
+        let locale: Locale = 'en'
         try {
-          const { weights } = JSON.parse(Buffer.concat(chunks).toString('utf8'))
-          const description = Object.entries(weights as Record<string, number>)
-            .map(([id, v]) => `${id} ${v}`)
-            .join(', ')
+          const body = JSON.parse(Buffer.concat(chunks).toString('utf8')) as {
+            weights?: unknown
+            locale?: unknown
+          }
+          weights = body.weights
+          if (body.locale !== undefined) {
+            if (!isLocale(body.locale)) return json({ error: 'invalid locale' }, 400)
+            locale = body.locale
+          }
+        } catch {
+          return json({ error: 'invalid JSON body' }, 400)
+        }
+
+        const described = describeWeights(weights, locale)
+        if ('invalid' in described) {
+          return json({ error: `invalid weight: ${described.invalid}` }, 400)
+        }
+
+        try {
           const upstream = await fetch('https://api.x.ai/v1/chat/completions', {
             method: 'POST',
             headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'grok-4.20-0309-non-reasoning',
-              temperature: 1.0,
-              max_tokens: 20,
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You name custom social feed ranking algorithms based on their engagement weights. Respond with ONLY a short, funny, memorable name of 2 to 4 words. No quotes, no punctuation at the end, no explanation.',
-                },
-                {
-                  role: 'user',
-                  content: `The user tuned these engagement weights for their feed ranking algorithm (defaults: like 0.5, reply 5, repost 1, quote 5, copy link 20, share 2, follow 4, click 0.4, video 0.05, not interested -43.2, block -31.2, mute -58.8, report -234): ${description}. Name the algorithm based on the personality a feed ranked with these weights has.`,
-                },
-              ],
-            }),
+            body: nameRequestBody(described.description, locale),
           })
-          const data = (await upstream.json()) as {
-            choices?: { message?: { content?: string } }[]
+          if (!upstream.ok) {
+            return json({ error: `upstream error ${upstream.status}` }, 502)
           }
-          const name = data.choices?.[0]?.message?.content?.trim().replace(/^["']|["']$/g, '')
-          res.statusCode = name ? 200 : 502
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(name ? { name } : { error: 'no name in response' }))
+          const name = nameFromResponse(await upstream.json())
+          return json(name ? { name } : { error: 'no name in response' }, name ? 200 : 502)
         } catch (err) {
-          res.statusCode = 500
-          res.end(JSON.stringify({ error: String(err) }))
+          return json({ error: String(err) }, 500)
         }
       })
     },
   }
 }
 
+// Unfurlers and crawlers that do not run JS see only the served HTML, so each locale
+// needs its own file with its own title/description/canonical: `/pt-br` must not be
+// answered with the English baseline. The Worker's SPA fallback still covers every
+// other path.
+function localeHtml(): Plugin {
+  return {
+    name: 'locale-html',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: (html) => replaceHead(html, DEFAULT_LOCALE),
+    },
+    // The default locale's file is already written at this point, hashed asset tags
+    // included, so the other locales are that same file with their head swapped.
+    writeBundle(options) {
+      const outDir = options.dir
+      if (!outDir) return
+      const base = readFileSync(join(outDir, 'index.html'), 'utf8')
+      for (const locale of LOCALES) {
+        if (locale === DEFAULT_LOCALE) continue
+        const html = replaceHead(
+          base.replace(/<html lang="[^"]*"/, `<html lang="${locale}"`),
+          locale
+        )
+        // `pt-br.html`, not `pt-br/index.html`: with Cloudflare's auto-trailing-slash
+        // handling the folder form makes `/pt-br` redirect to `/pt-br/`, and the
+        // canonical URL must be served directly, not through a hop.
+        const file = join(outDir, `${pathForLocale(locale).replace(/^\//, '')}.html`)
+        mkdirSync(dirname(file), { recursive: true })
+        writeFileSync(file, html)
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), devNameApi()],
+  plugins: [react(), devNameApi(), localeHtml()],
 })
